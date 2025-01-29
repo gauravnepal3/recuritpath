@@ -1,0 +1,53 @@
+{
+  "extends": "@repo/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@repo/ui/*": ["../../packages/ui/src/*"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "next.config.mjs",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "../../packages/ui/src/hooks/use-mobile.tsx",
+    "../../packages/ui/src/hooks/use-toast.ts",
+    "../../packages/ui/src/components/avatar.tsx",
+    "../../packages/ui/src/components/badge.tsx",
+    "../../packages/ui/src/components/breadcrumb.tsx",
+    "../../packages/ui/src/components/button.tsx",
+    "../../packages/ui/src/components/card.tsx",
+    "../../packages/ui/src/components/command.tsx",
+    "../../packages/ui/src/components/dialog.tsx",
+    "../../packages/ui/src/components/dropdown-menu.tsx",
+    "../../packages/ui/src/components/form.tsx",
+    "../../packages/ui/src/components/input.tsx",
+    "../../packages/ui/src/components/label.tsx",
+    "../../packages/ui/src/components/location-input.tsx",
+    "../../packages/ui/src/components/multi-select.tsx",
+    "../../packages/ui/src/components/popover.tsx",
+    "../../packages/ui/src/components/rich-text-editor.tsx",
+    "../../packages/ui/src/components/scroll-area.tsx",
+    "../../packages/ui/src/components/select.tsx",
+    "../../packages/ui/src/components/separator.tsx",
+    "../../packages/ui/src/components/sheet.tsx",
+    "../../packages/ui/src/components/sidebar.tsx",
+    "../../packages/ui/src/components/skeleton.tsx",
+    "../../packages/ui/src/components/sonner.tsx",
+    "../../packages/ui/src/components/switch.tsx",
+    "../../packages/ui/src/components/toast.tsx",
+    "../../packages/ui/src/components/toaster.tsx",
+    "../../packages/ui/src/components/toggle-group.tsx",
+    "../../packages/ui/src/components/toggle.tsx",
+    "../../packages/ui/src/components/tooltip.tsx"
+  ],
+  "exclude": ["node_modules"]
+}
