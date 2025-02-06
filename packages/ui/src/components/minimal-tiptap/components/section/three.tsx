@@ -3,12 +3,11 @@ import type { Editor } from '@tiptap/react'
 import type { toggleVariants } from '@repo/ui/components/toggle'
 import type { VariantProps } from 'class-variance-authority'
 import { CaretDownIcon, CheckIcon } from '@radix-ui/react-icons'
-import { ToolbarButton } from '../toolbar-button.js'
+import { ToolbarButton } from '@repo/ui/components/minimal-tiptap/components/toolbar-button'
 import { Popover, PopoverTrigger, PopoverContent } from '@repo/ui/components/popover'
 import { ToggleGroup, ToggleGroupItem } from '@repo/ui/components/toggle-group'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@repo/ui/components/tooltip'
-import { useTheme } from '../../hooks/use-theme.js'
-
+import { useTheme } from '@repo/ui/components/minimal-tiptap/hooks/use-theme'
 interface ColorItem {
   cssVar: string
   label: string

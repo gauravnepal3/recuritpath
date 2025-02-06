@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { cn } from '@repo/ui/lib/utils'
-import { getShortcutKey } from '../utils.js'
+import { getShortcutKey } from '@repo/ui/components/minimal-tiptap/utils.ts'
 
 export interface ShortcutKeyProps extends React.HTMLAttributes<HTMLSpanElement> {
   keys: string[]

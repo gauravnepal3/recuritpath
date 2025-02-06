@@ -17,10 +17,10 @@ import {
   UnsetAllMarks,
   ResetMarksOnEnter,
   FileHandler
-} from '../extensions/index.js'
+} from '@repo/ui/components/minimal-tiptap/extensions/index.ts'
 import { cn } from '@repo/ui/lib/utils'
-import { fileToBase64, getOutput, randomId } from '../utils.js'
-import { useThrottle } from './use-throttle.js'
+import { fileToBase64, getOutput, randomId } from '@repo/ui/components/minimal-tiptap/utils.ts'
+import { useThrottle } from '@repo/ui/components/minimal-tiptap/hooks/use-throttle.ts'
 import { toast } from 'sonner'
 
 export interface UseMinimalTiptapEditorProps extends UseEditorOptions {

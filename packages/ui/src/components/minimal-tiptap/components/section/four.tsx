@@ -4,7 +4,7 @@ import type { FormatAction } from '../../types.js'
 import type { toggleVariants } from '@repo/ui/components/toggle'
 import type { VariantProps } from 'class-variance-authority'
 import { CaretDownIcon, ListBulletIcon } from '@radix-ui/react-icons'
-import { ToolbarSection } from '../toolbar-section.js'
+import { ToolbarSection } from '@repo/ui/components/minimal-tiptap/components/toolbar-section'
 
 type ListItemAction = 'orderedList' | 'bulletList'
 interface ListItem extends FormatAction {

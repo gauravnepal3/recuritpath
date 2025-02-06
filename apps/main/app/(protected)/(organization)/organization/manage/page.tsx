@@ -14,7 +14,7 @@ const ManageOrganization = async () => {
     }
     const userOrganization = await getOrganization({ userID: user.id ?? '' })
     return (
-        <div className='container pt-8 max-w-screen-sm'>
+        <div className='container mx-auto pt-8 max-w-screen-sm'>
             <div className="flex justify-between border-b pb-3 items-center">
                 <div className="">Organization</div>
                 <AddOrganizationDialog userID={user?.id!} />

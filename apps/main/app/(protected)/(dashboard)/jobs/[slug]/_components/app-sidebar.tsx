@@ -26,6 +26,10 @@ interface AppSidebarProps {
             name: string,
             displayOrder: number,
             isDeletable: boolean
+        }[],
+        candidateApplication: {
+            id: string,
+            stageId: string
         }[]
     }
 }
@@ -38,7 +42,7 @@ export function AppSidebar({ jobDetails }: AppSidebarProps) {
                 title: x.name,
                 url: `/jobs/${jobDetails.id}/stages/${x.id}/applicants`,
                 icon: x.name === "Inbox" ? Inbox : x.name === "Archived" ? Archive : Folder,
-                candidateNo: 0,
+                candidateNo: jobDetails.candidateApplication.filter(candidate => candidate.stageId === x.id).length,
                 dispalyOrder: x.displayOrder,
             }))
             .sort((a, b) => {

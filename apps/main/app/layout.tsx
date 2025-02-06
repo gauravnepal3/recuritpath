@@ -4,7 +4,7 @@ import { SessionProvider } from 'next-auth/react'
 import { auth } from '@/auth'
 import '@repo/ui/globals.css'
 import { Toaster } from "@repo/ui/components/sonner";
-
+import { CookiesProvider } from 'next-client-cookies/server';
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -31,7 +31,9 @@ export default async function RootLayout({
               }
             }}
             position='bottom-center' />
+          <CookiesProvider>
           {children}
+          </CookiesProvider>
         </body>
       </html>
     </SessionProvider>

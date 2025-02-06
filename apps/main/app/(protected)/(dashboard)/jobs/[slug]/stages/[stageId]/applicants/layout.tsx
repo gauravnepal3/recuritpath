@@ -18,6 +18,22 @@ const getApplicantsByStage = async (stageID: string) => {
     return await prisma.jobStage.findFirst({
         where: {
             id: stageID
+        },
+        select: {
+            name: true,
+            candidateStage: {
+                select: {
+                    id: true,
+                    stageId: true,
+                    formResponses: {
+                        select: {
+                            id: true,
+                            label: true,
+                            value: true
+                        }
+                    }
+                },
+            }
         }
     })
 }
@@ -28,18 +44,20 @@ const StageLayout = async ({ children, params }: ProtectedLayoutProps) => {
         redirect('/organization/manage')
     }
     const stageID = (await params).stageId
+    const jobID = (await params).slug
     const applicantsByStage = await getApplicantsByStage(stageID)
     return (
         <div className="relative">
             <div className="flex z-10">
                 <SidebarProvider
                     style={{
-                        "--sidebar-width": "20rem",
+                        "--sidebar-width": "15rem",
                     } as React.CSSProperties}
                 >
-                    {applicantsByStage && <AppSidebar stageData={applicantsByStage} />}
+                    {applicantsByStage && <AppSidebar jobID={jobID} applicantsData={applicantsByStage} />}
                     <SidebarInset>
                         {children}
+
                     </SidebarInset>
                 </SidebarProvider>
             </div>

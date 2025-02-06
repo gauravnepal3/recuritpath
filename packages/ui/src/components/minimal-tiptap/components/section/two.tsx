@@ -12,7 +12,7 @@ import {
   TextNoneIcon,
   UnderlineIcon
 } from '@radix-ui/react-icons'
-import { ToolbarSection } from '../toolbar-section.js'
+import { ToolbarSection } from '@repo/ui/components/minimal-tiptap/components/toolbar-section'
 
 type TextStyleAction = 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code' | 'clearFormatting'
 

@@ -9,15 +9,24 @@ import { cn } from '@/lib/utils';
 import { buttonVariants } from '@repo/ui/components/button';
 import { SidebarInset, SidebarProvider } from '@repo/ui/components/sidebar';
 import { AppSidebar } from './_components/app-sidebar';
+import GeneratePreviewJob from '@/app/(protected)/_components/GeneratePreviewJob';
 interface ProtectedLayoutProps {
     children: React.ReactNode,
     params: Promise<{ slug: string }>
 };
 
 const getJobDetails = async (organizationID: string, userID: string, jobID: string) => {
-    return prisma.jobPost.findFirst({
+    return await prisma.jobPost.findFirst({
         where: {
-            id: jobID
+            id: jobID,
+            organization: {
+                organizationRole: {
+                    some: {
+                        userId: userID,
+                        role: "OWNER"
+                    }
+                }
+            }
         },
         include: {
             jobStage: {
@@ -29,6 +38,15 @@ const getJobDetails = async (organizationID: string, userID: string, jobID: stri
                     name: true,
                     isDeletable: true,
                     displayOrder: true
+                }
+            },
+            candidateApplication: {
+                select: {
+                    id: true,
+                    stageId: true
+                },
+                where: {
+                    jobId: jobID,
                 }
             }
         }
@@ -55,8 +73,11 @@ const JobLayout = async ({ children, params }: ProtectedLayoutProps) => {
                     <Link className={cn(buttonVariants({ variant: "ghost" }), 'w-8 h-8 p-2')} href={'/'}>
                         <ArrowLeft className='size-7' />
                     </Link>
-                    <div className="font-semibold text-lg">
-                        {jobDetails.title}
+                    <div className="flex gap-x-2">
+                        <div className="font-semibold text-lg">
+                            {jobDetails.title}
+                        </div>
+                        <GeneratePreviewJob jobID={jobDetails.id} organizationID={organization.value} />
                     </div>
                     <div className="ml-auto mr-3">
                         <Bell className='size-4'></Bell>

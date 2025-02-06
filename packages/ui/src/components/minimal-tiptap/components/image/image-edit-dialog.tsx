@@ -3,7 +3,7 @@ import type { VariantProps } from 'class-variance-authority'
 import type { toggleVariants } from '@repo/ui/components/toggle'
 import { useState } from 'react'
 import { ImageIcon } from '@radix-ui/react-icons'
-import { ToolbarButton } from '../toolbar-button.js'
+import { ToolbarButton } from '@repo/ui/components/minimal-tiptap/components/toolbar-button'
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@repo/ui/components/dialog'
-import { ImageEditBlock } from './image-edit-block.js'
+import { ImageEditBlock } from '@repo/ui/components/minimal-tiptap/components/image/image-edit-block'
 
 interface ImageEditDialogProps extends VariantProps<typeof toggleVariants> {
   editor: Editor

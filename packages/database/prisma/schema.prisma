@@ -30,6 +30,7 @@ model User {
   organizations         OrganizationUserRole[]
   isTwoFactorEnabled    Boolean                @default(false)
   twoFactorConfirmation TwoFactorConfirmation?
+  candidateTimeline   CandidateTimeline[]
 }
 
 model Account {
@@ -96,6 +97,7 @@ model Organization {
   organizationRole      OrganizationUserRole[]
   organizationActionLog OrganizationActivityLog[]
   jobPost               JobPost[]
+  jobPreview            JobPreview[]
   createdAt             DateTime                  @default(now())
 }
 
@@ -104,7 +106,7 @@ model OrganizationUserRole {
   role OrganizationRole
 
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction)
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: NoAction)
@@ -117,62 +119,122 @@ model OrganizationActivityLog {
   action String
 
   organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction)
 
   createdAt DateTime @default(now())
 }
 
 model JobPost {
-  id          String  @id @default(cuid())
-  title       String
-  description String?
-  category    String?
-  employmentType      String?
-  country             String?
-  city                String?
-  remoteOption        String?
-  countryResidence    String? @default("No")
+  id                   String   @id @default(cuid())
+  title                String
+  description          String?
+  category             String?
+  employmentType       String?
+  country              String?
+  city                 String?
+  remoteOption         String?
+  countryResidence     String?  @default("No")
   countryListResidence String[] @default([])
-  displaySalary       String?  @default("Not Shown")
-  currency            String?
-  salaryAmount        Float?   // Optional number
-  minimumAmount       Float?   // Optional number
-  maximumAmount       Float?   // Optional number
-  isPublished         Boolean @default(false)
-  isArchived          Boolean @default(false)
+  displaySalary        String?  @default("Not Shown")
+  currency             String?
+  salaryAmount         Float? // Optional number
+  minimumAmount        Float? // Optional number
+  maximumAmount        Float? // Optional number
+  isPublished          Boolean  @default(false)
+  isArchived           Boolean  @default(false)
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction)
 
-  jobApplication  JobApplication[]
-  jobStage  JobStage[]
+  jobApplication       JobApplication[]
+  jobStage             JobStage[]
+  jobPreview           JobPreview[]
+  candidateApplication CandidateApplication[]
+  createdAt            DateTime               @default(now())
+
+  CandidateTimeline CandidateTimeline[]
+}
+
+model JobApplication {
+  id           String   @id @default(cuid())
+  label        String
+  dataType     String
+  option       String[] @default([])
+  rule         String   @default("Optional")
+  questionType String   @default("Default")
+  isDeleted    Boolean  @default(false)
+
+  jobId   String
+  jobPost JobPost @relation(fields: [jobId], references: [id], onDelete: NoAction)
+
+  formResponse FormResponse[]
+
   createdAt DateTime @default(now())
 }
 
+model CandidateApplication {
+  id        String   @id @default(cuid())
+  jobId     String
+  createdAt DateTime @default(now())
+  stageId   String
 
-model JobApplication{
-  id String @id @default(cuid())
-  label String
-  dataType  String
-  option    String[] @default([])
-  rule      String    @default("Optional")
-  questionType  String  @default("Default")
-  isDeleted     Boolean @default(false)
-  
-  jobId String
-  jobPost   JobPost @relation(fields: [jobId], references: [id], onDelete: NoAction)
-  
+  jobPost       JobPost        @relation(fields: [jobId], references: [id], onDelete: NoAction)
+  jobStage      JobStage       @relation(fields: [stageId], references: [id], onDelete: NoAction)
+  formResponses FormResponse[]
+
+  CandidateTimeline CandidateTimeline[]
+}
+
+model CandidateTimeline {
+  id          String   @id @default(cuid())
   createdAt   DateTime @default(now())
+  userId      String?
+  actionType  String
+  jobId       String
+  timelineText  String
+  comment     String?
+
+  candidateId String
+  candidateApplication  CandidateApplication @relation(fields: [candidateId],references: [id],onDelete: Cascade)
+  jobPost      JobPost  @relation(fields: [jobId], references: [id])
+  user       User?       @relation(fields: [userId], references: [id])
+}
+
+model FormResponse {
+  id                     String   @id @default(cuid())
+  candidateApplicationId String
+  jobApplicationId       String
+  label                  String // Store the label at the time of submission
+  value                  String?
+  createdAt              DateTime @default(now())
+
+  candidateApplication CandidateApplication @relation(fields: [candidateApplicationId], references: [id])
+  jobApplication       JobApplication       @relation(fields: [jobApplicationId], references: [id])
+}
+
+model JobPreview {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  isExpired Boolean  @default(false)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  jobId   String
+  jobPost JobPost @relation(fields: [jobId], references: [id], onDelete: NoAction)
 }
 
 model JobStage {
-  id String @id @default(cuid())
-  name  String
-  isDeletable Boolean @default(false)
-  isDeleted Boolean @default(false)
-  displayOrder  Int
+  id           String  @id @default(cuid())
+  name         String
+  isDeletable  Boolean @default(false)
+  isDeleted    Boolean @default(false)
+  displayOrder Int
 
-  jobId String
-  jobPost   JobPost @relation(fields: [jobId], references: [id], onDelete: NoAction)
+  jobId     String
+  jobPost   JobPost  @relation(fields: [jobId], references: [id], onDelete: NoAction)
   createdAt DateTime @default(now())
+
+  candidateStage CandidateApplication[]
 }

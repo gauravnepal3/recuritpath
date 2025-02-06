@@ -36,7 +36,7 @@ export default async function Home() {
   const jobDetails = await getJobDetails(user?.id, activeOrganization.value)
   return (
     <main>
-      <div className="container mt-3 max-w-screen-md">
+      <div className="container mx-auto mt-3 max-w-screen-md">
         <div className="flex justify-between border-b pb-3 items-center">
           <div className="">Jobs</div>
           <AddJobDialog userID={user?.id!} organizationID={activeOrganization.value} />

@@ -43,11 +43,13 @@
     "../../packages/ui/src/components/skeleton.tsx",
     "../../packages/ui/src/components/sonner.tsx",
     "../../packages/ui/src/components/switch.tsx",
+    "../../packages/ui/src/components/timeline.tsx",
     "../../packages/ui/src/components/toast.tsx",
     "../../packages/ui/src/components/toaster.tsx",
     "../../packages/ui/src/components/toggle-group.tsx",
     "../../packages/ui/src/components/toggle.tsx",
-    "../../packages/ui/src/components/tooltip.tsx"
+    "../../packages/ui/src/components/tooltip.tsx",
+    "../../packages/ui/src/components/minimal-tiptap/minimal-tiptap.tsx"
   ],
   "exclude": ["node_modules"]
 }

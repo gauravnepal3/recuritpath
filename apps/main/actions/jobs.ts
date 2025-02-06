@@ -4,7 +4,6 @@ import { z } from "zod"
 import { currentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
-import { X } from 'lucide-react'
 
 
 const FormSchema = z.object({
@@ -193,6 +192,30 @@ const defaultJobApplication = [
     },
 ]
 
+export const generatePreviewID = async (organizationID: string, jobID: string) => {
+    try {
+        const generatePreview = await prisma.jobPreview.create({
+            data: {
+                jobId: jobID,
+                organizationId: organizationID,
+                expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
+                isExpired: false
+            }
+        })
+        return {
+            type: "SUCCESS",
+            message: "Success",
+            data: generatePreview
+        }
+    } catch (err) {
+        console.log(err)
+        return {
+            type: "ERROR",
+            message: "Something went wrong!"
+        }
+    }
+}
+
 export const createJobPost = async <T>(userID: string, title: string, organizationID: string): Promise<SuccessResponse<T> | ErrorResponse> => {
     try {
 
@@ -223,7 +246,7 @@ export const createJobPost = async <T>(userID: string, title: string, organizati
             }
         }
 
-        if (getOrganizationDetails.organizationRole[0].role !== "OWNER") {
+        if (!getOrganizationDetails.organizationRole[0] || getOrganizationDetails.organizationRole[0].role !== "OWNER") {
             return {
                 type: "ERROR",
                 message: "You are restricted for this action!"
@@ -312,7 +335,7 @@ export const updateJobDetails = async ({ userID, organizationID, jobID, data }: 
             }
         }
 
-        if (getOrganizationDetails.organizationRole[0].role !== "OWNER") {
+        if (!getOrganizationDetails.organizationRole[0] || getOrganizationDetails.organizationRole[0].role !== "OWNER") {
             return {
                 type: "ERROR",
                 message: "You are restricted for this action!"
@@ -431,7 +454,7 @@ export const updateJobDescription = async ({ userID, jobID, description, organiz
             }
         }
 
-        if (getOrganizationDetails.organizationRole[0].role !== "OWNER") {
+        if (!getOrganizationDetails.organizationRole[0] || getOrganizationDetails.organizationRole[0].role !== "OWNER") {
             return {
                 type: "ERROR",
                 message: "You are restricted for this action!"
@@ -753,6 +776,275 @@ export const updateDeleteStatusAdditionalQuestion = async ({ userID, jobID, ques
     }
 }
 
+export const moveToStage = async ({ userID, candidateID, stageID }: { userID: string, candidateID: string, stageID: string }) => {
+    try {
+        const user = await currentUser();
+        if (!user?.id) {
+            redirect('/login')
+        }
+        if (user?.id !== userID) {
+            throw new Error("Invalid user request")
+        }
+
+        const candidateDetails = await prisma.candidateApplication.findFirst({
+            where: {
+                id: candidateID
+            }
+        })
+        if (!candidateDetails) {
+            return {
+                type: "ERROR",
+                message: "Invalid update request made!"
+            }
+        }
+        const stageDetails = await prisma.jobStage.findFirst({
+            where: {
+                id: stageID
+            }
+        })
+        const jobID = stageDetails?.jobId
+        if (!jobID) {
+            return {
+                type: "ERROR",
+                message: "Invalid update request made!"
+            }
+        }
+        try {
+            const updatedCandidateStage = await prisma.candidateApplication.update({
+                data: {
+                    stageId: stageID,
+                    CandidateTimeline: {
+                        create: {
+                            actionType: "EVENT",
+                            timelineText: `${user?.name} moved to ${stageDetails?.name}`,
+                            userId: userID,
+                            jobId: stageDetails?.jobId as string
+                        }
+                    }
+                },
+                where: {
+                    id: candidateDetails.id
+                }
+            })
+            // const timelineStatus=await prisma.candidateTimeline.create({
+            //     data:{
+
+            //     }
+            // })
+            revalidatePath(`/jobs/${jobID}/setting/application`)
+            return {
+                type: "SUCCESS",
+                message: "Success!",
+                data: updatedCandidateStage
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                type: "ERROR",
+                message: "Something went wrong!"
+            }
+        }
+    } catch (err) {
+        console.log(err)
+        return {
+            type: "ERROR",
+            message: "Something went wrong!"
+        }
+    }
+}
+
+export const addComment = async ({ userID, jobID, comment, candidateID }: { userID: string, jobID: string, comment: string, candidateID: string }) => {
+
+    try {
+
+
+        const user = await currentUser();
+        if (!user?.id) {
+            redirect('/login')
+        }
+        if (user?.id !== userID) {
+            throw new Error("Invalid user request")
+        }
+
+        const jobData = await prisma.jobPost.findFirst({
+            where: {
+                id: jobID
+            }
+        })
+        if (!jobData) {
+            return {
+                type: "ERROR",
+                message: "Invalid update request made!"
+            }
+        }
+        const candidateDetails = await prisma.candidateApplication.findFirst({
+            where: {
+                id: candidateID
+            }
+        })
+        if (!candidateDetails) {
+            return {
+                type: "ERROR",
+                message: "Invalid comment request made!"
+            }
+        }
+        try {
+            const addComment = await prisma.candidateTimeline.create({
+                data: {
+                    userId: userID,
+                    actionType: "COMMENT",
+                    candidateId: candidateID,
+                    jobId: jobID,
+                    timelineText: `${user?.name} left a comment`,
+                    comment: comment
+                }
+            });
+            revalidatePath(`/jobs/${jobID}/stages/${candidateDetails.stageId}/applicants/${candidateID}`)
+            return {
+                type: "SUCCESS",
+                message: "Description Updated!",
+                data: addComment
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                type: "ERROR",
+                message: "Something went wrong!"
+            }
+        }
+    } catch (err) {
+        console.log(err)
+        return {
+            type: "ERROR",
+            message: "Something went wrong!"
+        }
+    }
+}
+
+export const updateComment = async ({ userID, jobID, comment, candidateID, timelineID }: { userID: string, jobID: string, comment: string, candidateID: string, timelineID: string }) => {
+
+    try {
+        const user = await currentUser();
+        if (!user?.id) {
+            redirect('/login')
+        }
+        if (user?.id !== userID) {
+            throw new Error("Invalid user request")
+        }
+
+        const jobData = await prisma.jobPost.findFirst({
+            where: {
+                id: jobID
+            }
+        })
+        if (!jobData) {
+            return {
+                type: "ERROR",
+                message: "Invalid update request made!"
+            }
+        }
+        const candidateDetails = await prisma.candidateApplication.findFirst({
+            where: {
+                id: candidateID
+            }
+        })
+        if (!candidateDetails) {
+            return {
+                type: "ERROR",
+                message: "Invalid comment request made!"
+            }
+        }
+        try {
+            const addComment = await prisma.candidateTimeline.update({
+                data: {
+                    comment: comment
+                },
+                where: {
+                    id: timelineID
+                }
+            });
+            revalidatePath(`/jobs/${jobID}/stages/${candidateDetails.stageId}/applicants/${candidateID}`)
+            return {
+                type: "SUCCESS",
+                message: "Description Updated!",
+                data: addComment
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                type: "ERROR",
+                message: "Something went wrong!"
+            }
+        }
+    } catch (err) {
+        console.log(err)
+        return {
+            type: "ERROR",
+            message: "Something went wrong!"
+        }
+    }
+}
+
+export const deleteComment = async ({ userID, jobID, comment, candidateID, timelineID }: { userID: string, jobID: string, comment: string, candidateID: string, timelineID: string }) => {
+
+    try {
+        const user = await currentUser();
+        if (!user?.id) {
+            redirect('/login')
+        }
+        if (user?.id !== userID) {
+            throw new Error("Invalid user request")
+        }
+
+        const jobData = await prisma.jobPost.findFirst({
+            where: {
+                id: jobID
+            }
+        })
+        if (!jobData) {
+            return {
+                type: "ERROR",
+                message: "Invalid update request made!"
+            }
+        }
+        const candidateDetails = await prisma.candidateApplication.findFirst({
+            where: {
+                id: candidateID
+            }
+        })
+        if (!candidateDetails) {
+            return {
+                type: "ERROR",
+                message: "Invalid comment request made!"
+            }
+        }
+        try {
+            const addComment = await prisma.candidateTimeline.delete({
+                where: {
+                    id: timelineID
+                }
+            });
+            revalidatePath(`/jobs/${jobID}/stages/${candidateDetails.stageId}/applicants/${candidateID}`)
+            return {
+                type: "SUCCESS",
+                message: "Description Updated!",
+                data: addComment
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                type: "ERROR",
+                message: "Something went wrong!"
+            }
+        }
+    } catch (err) {
+        console.log(err)
+        return {
+            type: "ERROR",
+            message: "Something went wrong!"
+        }
+    }
+}
 export const getOrganization = async ({ userID }: { userID: string }) => {
     const user = await currentUser();
     if (!user?.id) {

@@ -1,1 +1,1 @@
-export * from './code-block-lowlight.js'
+export * from './code-block-lowlight.ts'

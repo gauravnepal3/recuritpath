@@ -18,8 +18,8 @@ import {
 import { cn } from '@repo/ui/lib/utils'
 
 // Import JSON data directly
-import countries from '@/src/data/countries.json' assert { type: 'json' }
-import states from '@/src/data/states.json' assert { type: 'json' }
+import countries from '@repo/ui/data/countries.json' assert { type: 'json' }
+import states from '@repo/ui/data/states.json' assert { type: 'json' }
 interface Timezone {
     zoneName: string
     gmtOffset: number

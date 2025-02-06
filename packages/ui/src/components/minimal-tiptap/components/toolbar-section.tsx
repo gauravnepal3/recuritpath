@@ -6,9 +6,9 @@ import type { toggleVariants } from '@repo/ui/components/toggle'
 import { cn } from '@repo/ui/lib/utils'
 import { CaretDownIcon } from '@radix-ui/react-icons'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@repo/ui/components/dropdown-menu'
-import { ToolbarButton } from './toolbar-button.js'
-import { ShortcutKey } from './shortcut-key.js'
-import { getShortcutKey } from '../utils.js'
+import { ToolbarButton } from '@repo/ui/components/minimal-tiptap/components/toolbar-button'
+import { ShortcutKey } from '@repo/ui/components/minimal-tiptap/components/shortcut-key'
+import { getShortcutKey } from '@repo/ui/components/minimal-tiptap/utils.ts'
 
 interface ToolbarSectionProps extends VariantProps<typeof toggleVariants> {
   editor: Editor

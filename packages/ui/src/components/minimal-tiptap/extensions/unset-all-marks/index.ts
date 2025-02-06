@@ -1,1 +1,1 @@
-export * from './unset-all-marks.js'
+export * from './unset-all-marks.ts'

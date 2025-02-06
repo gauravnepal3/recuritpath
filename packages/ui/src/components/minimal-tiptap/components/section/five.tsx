@@ -4,9 +4,9 @@ import type { FormatAction } from '../../types.js'
 import type { toggleVariants } from '@repo/ui/components/toggle'
 import type { VariantProps } from 'class-variance-authority'
 import { CaretDownIcon, CodeIcon, DividerHorizontalIcon, PlusIcon, QuoteIcon } from '@radix-ui/react-icons'
-import { LinkEditPopover } from '../link/link-edit-popover.js'
-import { ImageEditDialog } from '../image/image-edit-dialog.js'
-import { ToolbarSection } from '../toolbar-section.js'
+import { LinkEditPopover } from '@repo/ui/components/minimal-tiptap/components/link/link-edit-popover'
+import { ImageEditDialog } from '@repo/ui/components/minimal-tiptap/components/image/image-edit-dialog'
+import { ToolbarSection } from '@repo/ui/components/minimal-tiptap/components/toolbar-section'
 
 type InsertElementAction = 'codeBlock' | 'blockquote' | 'horizontalRule'
 interface InsertElement extends FormatAction {
