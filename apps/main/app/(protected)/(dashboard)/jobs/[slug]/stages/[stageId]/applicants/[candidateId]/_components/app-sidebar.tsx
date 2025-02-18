@@ -6,12 +6,22 @@ import {
     SidebarGroupLabel,
     SidebarRail,
 } from "@repo/ui/components/sidebar"
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@repo/ui/components/dropdown-menu"
 import { NavSecondary } from "./nav-secondary"
-import { File, Mail, MessageCircle, User, Clipboard } from "lucide-react" // Adjust icon import as necessary
+import { File, Mail, MessageCircle, User, Clipboard, Phone, MoreHorizontal } from "lucide-react" // Adjust icon import as necessary
 import { Button } from "@repo/ui/components/button"
 import { moveToStage } from "@/actions/jobs"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { MoveToStage } from "./MovetoStage"
 
 type applicantDataType = {
     id: string;
@@ -36,10 +46,6 @@ type applicantDataType = {
 
 export function AppSidebar({ applicantData, jobID, candidateID, stageID, userID }: { jobID: string, candidateID: string, stageID: string, applicantData: applicantDataType, userID: string }) {
     const router = useRouter();
-
-
-    // Generate navSecondary items
-    // const navSecondaryItems = navSecondary(applicantsData);
     const navSecondaryItems = [
         {
             title: "Overview",
@@ -58,10 +64,7 @@ export function AppSidebar({ applicantData, jobID, candidateID, stageID, userID 
         }
     ]
     const currentJobStage = applicantData.jobPost.jobStage.find(x => x.id === stageID)
-    console.log(currentJobStage)
     const nextJobStage = applicantData.jobPost.jobStage.find(x => x.displayOrder === Number((currentJobStage?.displayOrder ?? 0) + 1))
-    console.log(nextJobStage)
-
     return (
         <Sidebar
             collapsible="none"
@@ -76,16 +79,27 @@ export function AppSidebar({ applicantData, jobID, candidateID, stageID, userID 
                 </div>
 
                 <div className="pl-3 pt-3 text-xs font-bold">Contact Information</div>
-                <SidebarGroupLabel className="">
+                <SidebarGroupLabel className="mt-3">
+                    <div className="flex flex-col gap-y-2">
+
                     <div className="flex gap-1 items-center text-xs">
                         <Mail className="size-4"></Mail>
                         <span className="underline">
                             {applicantData.formResponses.find(x => x.label === "Email")?.value}
                         </span>
                     </div>
+                        {applicantData.formResponses.find(x => x.label === "Phone Number")?.value &&
+                            <div className="flex gap-1 items-center text-xs">
+                                <Phone className="size-4"></Phone>
+                                <span className="">
+                                    {applicantData.formResponses.find(x => x.label === "Phone Number")?.value}
+                                </span>
+                            </div>
+                        }
+                    </div>
 
                 </SidebarGroupLabel>
-                <SidebarGroupLabel className=" mt-5">
+                <SidebarGroupLabel className=" mt-5 flex">
                     {!(currentJobStage?.name == "Hired" || currentJobStage?.name == "Archive") &&
                         <Button onClick={() => {
                             try {
@@ -111,12 +125,23 @@ export function AppSidebar({ applicantData, jobID, candidateID, stageID, userID 
                             } catch (error) {
                                 console.error("Form submission error", error);
                                 toast.error("Failed to submit the form. Please try again.");
-                            } finally {
                             }
                         }} className="text-xs font-light">
                             Move to {nextJobStage?.name}
                         </Button>
                     }
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 ml-4 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <MoreHorizontal />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <MoveToStage userID={userID} candidateID={candidateID} jobID={jobID} jobStages={applicantData.jobPost.jobStage.map(x => ({ label: x.name, value: x.id }))} />
+                            <DropdownMenuItem>Archive</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </SidebarGroupLabel>
                 {/* Pass navSecondaryItems to NavSecondary */}
             </SidebarContent>

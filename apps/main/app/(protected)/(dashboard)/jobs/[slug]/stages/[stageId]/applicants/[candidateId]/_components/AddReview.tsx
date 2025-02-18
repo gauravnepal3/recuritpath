@@ -1,5 +1,5 @@
 'use client'
-import { Copy } from "lucide-react"
+import { Copy, Globe, Mail, Phone, Scroll } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -32,6 +32,8 @@ import React from "react"
 import { addComment } from "@/actions/jobs"
 import PDFReader from "./PDFReader"
 import { ScrollArea } from "@repo/ui/components/scroll-area"
+import { Badge } from "@repo/ui/components/badge"
+import TextEditor from "./TextEditor"
 
 const FormSchema = z.object({
     comment: z
@@ -51,6 +53,9 @@ type formResponseType = {
     label: string;
     value: string | null;
     createdAt: Date;
+    jobApplication: {
+        questionType: String
+    }
 }
 
 type jobPostType = {
@@ -68,7 +73,7 @@ export function AddReview({ userID, candidateID, jobID, jobDetails, formResponse
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
     })
-
+    const additionQuestion = formResponse.filter(x => x.jobApplication.questionType === "Additional")
     const [open, setOpen] = React.useState<boolean>(false);
     function onSubmit(data: z.infer<typeof FormSchema>) {
         try {
@@ -103,53 +108,68 @@ export function AddReview({ userID, candidateID, jobID, jobDetails, formResponse
                     Add review
                 </Button>
             </DialogTrigger>
-            <DialogContent className="p-2 overflow-y-auto max-h-[80vh] rounded-none max-w-screen-xl [&>button:last-child]:hidden ">
-                <DialogHeader>
-                    <DialogTitle className="border-b pb-2">
-                        <div className="text-2xl font-bold">
-                            <span>
-                                {formResponse.find(x => x.label === "Name")?.value}
-                            </span>
-                            <span className="font-normal text-lg">
-                                {" "}  for {jobDetails.title}
-                            </span>
-                        </div>
-                    </DialogTitle>
-                </DialogHeader>
+            <DialogContent className="pb-5 p-0 overflow-hidden max-h-[90vh] rounded-none max-w-screen-xl [&>button:last-child]:hidden ">
                 <div className="grid grid-cols-2 gap-x-5">
-                    <div className="col-span-1">
-
-                        <div className="">
-                            <div className="text-lg font-semibold">Resume</div>
-                            <div className="border p-2 rounded">
-                                <PDFReader url={resumeLink} />
+                    <div className="col-span-1 p-2">
+                        <DialogTitle className="border-b pb-2">
+                            <div className="text-2xl font-bold">
+                                <span>
+                                    {formResponse.find(x => x.label === "Name")?.value}
+                                </span>
+                                <span className="font-normal text-lg">
+                                    {" "}  for {jobDetails.title}
+                                </span>
                             </div>
-                        </div>
-                    </div>
-                    <div className="col-span-1">
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="">
-                                <FormField
-                                    control={form.control}
-                                    name="comment"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-1">
-                                            <FormControl>
-                                                <Textarea
-                                                    placeholder="Share a little bit about the candidate"
-                                                    className="resize-none min-h-[100px]"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <div className="mt-5">
-                                    <Button className="w-full" type="submit">Submit</Button>
+                        </DialogTitle>
+                        <ScrollArea className="max-h-[80vh] mt-3 overflow-y-auto">
+                            <div className="flex gap-x-2">
+                                <Badge className="text-muted-foreground flex gap-x-2" variant={'outline'}>
+                                    <Mail className="size-4" />
+                                    <span >
+                                        {formResponse.find(x => x.label === "Email")?.value}
+                                    </span>
+                                </Badge>
+                                <Badge className="text-muted-foreground flex gap-x-2" variant={'outline'}>
+                                    <Phone className="size-4" />
+                                    <span >
+                                        {formResponse.find(x => x.label === "Phone Number")?.value}
+                                    </span>
+                                </Badge>
+                                <Badge className="text-muted-foreground flex gap-x-2" variant={'outline'}>
+                                    <Globe className="size-4" />
+                                    <span >
+                                        {formResponse.find(x => x.label === "Location")?.value}
+                                    </span>
+                                </Badge>
+                            </div>
+                            <div className="border my-2 rounded">
+                                {additionQuestion.length === 0 ?
+                                    <>
+                                        No question response to show
+                                    </> : <div className="text-xs p-4">
+                                        {additionQuestion.map(x => (
+                                            <div key={x.id} className="mb-3">
+                                                <div className="font-bold">
+                                                    {x.label}
+                                                </div>
+                                                <div className="italic">
+                                                    {x.value}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                }
+                            </div>
+                            <div className="">
+                                <div className="text-lg font-semibold">Resume</div>
+                                <div className="border p-2 rounded">
+                                    <PDFReader url={resumeLink} />
                                 </div>
-                            </form>
-                        </Form>
+                            </div>
+                        </ScrollArea>
+                    </div>
+                    <div className="col-span-1 h-full">
+                        <TextEditor setOpen={setOpen} userID={userID} candidateID={candidateID} jobID={jobID} />
                     </div>
                 </div>
             </DialogContent>

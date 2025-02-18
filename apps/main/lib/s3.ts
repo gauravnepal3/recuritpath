@@ -10,6 +10,8 @@ const s3Client = new S3Client({
     },
 });
 
+export { s3Client };
+
 export async function generatePresignedUrl(bucketName: string, fileKey: string) {
     const command = new GetObjectCommand({
         Bucket: bucketName,

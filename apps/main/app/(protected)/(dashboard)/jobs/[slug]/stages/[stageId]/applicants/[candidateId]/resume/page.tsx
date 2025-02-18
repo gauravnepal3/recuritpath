@@ -24,8 +24,8 @@ const Resume = async ({
     const fileURL = await generatePresignedUrl(process.env.AWS_S3_BUCKET_NAME!, `uploads/${resumeName}`!)
     return (
         <div className='p-2 pt-7'>
-            <div className="text-2xl pl-2 font-bold">Resume</div>
-            <div className="mt-4 h-[calc(100vh-12rem)]"> {/* Adjusted height calculation */}
+            <div className="text-2xl w-full pl-2 font-bold">Resume</div>
+            <div className="mt-4 w-full h-[calc(100vh-12rem)]"> {/* Adjusted height calculation */}
                 <PDFReader url={fileURL} />
             </div>
         </div>

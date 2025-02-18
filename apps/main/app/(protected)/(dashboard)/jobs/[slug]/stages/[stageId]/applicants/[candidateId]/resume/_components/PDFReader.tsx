@@ -20,7 +20,7 @@ const PDFReader = ({ url }: { url: string }) => {
             file={url}
             onLoadSuccess={onDocumentLoadSuccess}
         >
-            <div className="overflow-y-auto p-0">
+            <div className="overflow-y-auto w-full p-0">
                 {numPages &&
                     Array.from({ length: numPages }, (_, index) => index + 1).map(
                         (pageNumber) => <Page key={pageNumber} pageNumber={pageNumber} />

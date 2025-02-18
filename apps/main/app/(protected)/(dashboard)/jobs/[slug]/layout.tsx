@@ -10,6 +10,7 @@ import { buttonVariants } from '@repo/ui/components/button';
 import { SidebarInset, SidebarProvider } from '@repo/ui/components/sidebar';
 import { AppSidebar } from './_components/app-sidebar';
 import GeneratePreviewJob from '@/app/(protected)/_components/GeneratePreviewJob';
+import { ScrollArea } from '@repo/ui/components/scroll-area';
 interface ProtectedLayoutProps {
     children: React.ReactNode,
     params: Promise<{ slug: string }>

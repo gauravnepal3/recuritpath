@@ -24,7 +24,7 @@ const getJobDetails = async (userID: string, organizationID: string) => {
 export default async function Home() {
   const user = await currentUser()
   if (!user?.id) {
-    return 404;
+    redirect('/auth/login');
   }
   const cookieStore = await cookies()
   const activeOrganization = cookieStore.get('organization')

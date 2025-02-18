@@ -2,9 +2,8 @@
 
 import { generatePresignedUrl } from "./getPresignedURL";
 import { validateRecaptcha } from "./reCaptcha";
-import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+import { prisma } from "@repo/database"
 
 interface SuccessResponse<T = any> {
     type: "SUCCESS";

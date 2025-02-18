@@ -21,13 +21,13 @@ import {
 import { Switch } from "@repo/ui/components/switch"
 import Link from "next/link"
 import { currentUser } from "@/lib/auth"
-import { User } from "next-auth"
+import { ExtendedUser } from "next-auth"
 import { UserRole } from "@repo/database"
 
 
 interface AppSidebarProps {
 
-    user: (User & { role: UserRole; isTwoFactorEnabled: boolean; isOAuth: boolean; }) | undefined;
+    user: (ExtendedUser & { role: UserRole; isTwoFactorEnabled: boolean; isOAuth: boolean; }) | undefined;
     organizationDetails: any
 }
 // This is sample data

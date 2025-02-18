@@ -10,6 +10,9 @@ import { EditComment } from './_components/EditComment'
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/avatar'
 import { AddReview } from './_components/AddReview'
 import { generatePresignedUrl } from '@/lib/s3'
+import TipTapRenderer from './_components/TiptapEditorContent'
+import TipTapHTMLRenderer from './_components/TiptapEditorContent'
+import { cn } from '@repo/ui/lib/utils'
 
 
 const getCandidateDetails = async (candidateID: string) => {
@@ -18,7 +21,21 @@ const getCandidateDetails = async (candidateID: string) => {
             id: candidateID
         },
         include: {
-            formResponses: true,
+            formResponses: {
+                select: {
+                    id: true,
+                    candidateApplicationId: true,
+                    jobApplicationId: true,
+                    label: true,
+                    value: true,
+                    createdAt: true,
+                    jobApplication: {
+                        select: {
+                            questionType: true
+                        }
+                    }
+                },
+            },
             jobPost: true,
             CandidateTimeline: {
                 include: {
@@ -27,6 +44,14 @@ const getCandidateDetails = async (candidateID: string) => {
                             name: true,
                             email: true,
                             image: true
+                        }
+                    },
+                    candidateReview: {
+                        select: {
+                            createdAt: true,
+                            id: true,
+                            verdict: true,
+                            description: true
                         }
                     }
                 }
@@ -56,15 +81,31 @@ const CandidatePage = async ({
             image: x.user?.image
         },
         comment: x.comment,
-        tag: '',
+        verdict: x.candidateReview?.verdict,
+        reviewComment: x.candidateReview?.description,
         icon: x.actionType === "EVENT" && (x.timelineText.includes('Hired') ? <UserCheck className='size-4 text-muted-foreground' /> : <ArrowLeftRight className='size-4 text-muted-foreground' />)
     }))
     const resumeName = candidateData?.formResponses.find(x => x.label === "Resume")?.value
     const fileURL = await generatePresignedUrl(process.env.AWS_S3_BUCKET_NAME!, `uploads/${resumeName}`!)
+    const getColorForVerdict = (verdict: string) => {
+        switch (verdict) {
+            case "Strong Yes":
+                return 'bg-gradient-to-r from-lime-400 to-lime-500'
+            case "Yes":
+                return 'bg-gradient-to-r from-teal-200 to-teal-500'
+            case "No":
+                return "bg-gradient-to-r from-amber-500 to-pink-500 text-white"
+            case "Strong No":
+                return "bg-gradient-to-r from-red-500 to-orange-500"
+            default:
+                return ""
+
+        }
+    }
     return (
         <div className=''>
             <div className="text-2xl font-bold border-b p-2 pt-4">Overview</div>
-            <div className="max-w-xl mx-auto mt-10">
+            <div className=" px-5 mt-10">
                 <div className="relative">
                     {/* Vertical Line */}
                     <div className="absolute left-4 top-0 w-1 h-full bg-gray-300"></div>
@@ -84,8 +125,7 @@ const CandidatePage = async ({
                         </div>
                     </div>
                     {/* Additional Question Display */}
-                    <div className="relative flex items-start space-x-4 mb-8">
-                        {/* Normal Timeline Events (with Icons) */}
+                    {/* <div className="relative flex items-start space-x-4 mb-8">
                         <div className="relative -left-7 w-full ml-[30px]">
                             <div className="mt-2 p-4 border bg-background grid place-items-center min-h-[100px] rounded">
                                 <div className="">
@@ -98,7 +138,7 @@ const CandidatePage = async ({
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                     {timelineData?.map((item, index) => (
                         <div key={item.id} className="relative flex items-center space-x-4 mb-4">
                             {/* Normal Timeline Events (with Icons) */}
@@ -133,14 +173,23 @@ const CandidatePage = async ({
                                                 </Avatar>
                                                 <p className="text-xs text-muted-foreground">{item.title} · {item.time}</p>
                                             </div>
+
                                             <div className="">
+                                                    {item.type === "COMMENT" &&
                                                 <EditComment userID={user.id} candidateID={candidateId} jobID={jobID} timelineID={item.id} comment={item.comment ?? ''} />
+                                                    }
                                             </div>
                                         </div>
+
                                         <p className="text-sm text-gray-800">{item.comment}</p>
-                                        {item.tag && (
-                                            <span className="mt-2 inline-block px-3 py-1 text-xs font-medium text-orange-700 bg-orange-100 rounded-md">
-                                                {item.tag}
+                                            {item.type === "REVIEW" &&
+                                                <div className="mt-3">
+                                                    <TipTapHTMLRenderer content={item.reviewComment ?? ''} />
+                                                </div>
+                                            }
+                                            {item.verdict && (
+                                                <span className={cn(getColorForVerdict(item.verdict), "mt-2 inline-block px-3 py-1 text-xs font-medium rounded-md")}>
+                                                    {item.verdict}
                                             </span>
                                         )}
                                     </div>

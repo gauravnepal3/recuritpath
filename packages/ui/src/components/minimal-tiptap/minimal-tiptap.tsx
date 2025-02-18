@@ -6,14 +6,14 @@ import type { UseMinimalTiptapEditorProps } from './hooks/use-minimal-tiptap.js'
 import { EditorContent, EditorProvider } from '@tiptap/react'
 import { Separator } from '@repo/ui/components/separator'
 import { cn } from '@repo/ui/lib/utils'
-import { SectionOne } from '@repo/ui/components/minimal-tiptap/components/section/one'
-import { SectionTwo } from '@repo/ui/components/minimal-tiptap/components/section/two'
-import { SectionThree } from '@repo/ui/components/minimal-tiptap/components/section/three'
-import { SectionFour } from '@repo/ui/components/minimal-tiptap/components/section/four'
-import { SectionFive } from '@repo/ui/components/minimal-tiptap/components/section/five'
+import { SectionOne } from '@repo/ui/components/minimal-tiptap/components/section/one.tsx'
+import { SectionTwo } from '@repo/ui/components/minimal-tiptap/components/section/two.tsx'
+import { SectionThree } from '@repo/ui/components/minimal-tiptap/components/section/three.tsx'
+import { SectionFour } from '@repo/ui/components/minimal-tiptap/components/section/four.tsx'
+import { SectionFive } from '@repo/ui/components/minimal-tiptap/components/section/five.tsx'
 import { LinkBubbleMenu } from './components/bubble-menu/link-bubble-menu.tsx'
 import { useMinimalTiptapEditor } from '@repo/ui/components/minimal-tiptap//hooks/use-minimal-tiptap.ts'
-import { MeasuredContainer } from '@repo/ui/components/minimal-tiptap/components/measured-container'
+import { MeasuredContainer } from '@repo/ui/components/minimal-tiptap/components/measured-container.tsx'
 
 export interface MinimalTiptapProps extends Omit<UseMinimalTiptapEditorProps, 'onUpdate'> {
   value?: Content
@@ -68,7 +68,7 @@ export const MinimalTiptapEditor = React.forwardRef<HTMLDivElement, MinimalTipta
         name="editor"
         ref={ref}
         className={cn(
-          'flex h-auto min-h-72 w-full flex-col rounded-md border border-input shadow-sm focus-within:border-primary',
+          'flex h-auto min-h-72 w-full flex-col rounded-md border border-input',
           className
         )}
       >

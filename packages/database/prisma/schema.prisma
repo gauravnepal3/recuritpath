@@ -19,18 +19,20 @@ enum OrganizationRole {
 }
 
 model User {
-  id                    String                 @id @default(cuid())
-  name                  String?
-  email                 String?                @unique
-  emailVerified         DateTime?
-  image                 String?
-  password              String?
-  role                  UserRole               @default(USER)
-  accounts              Account[]
-  organizations         OrganizationUserRole[]
-  isTwoFactorEnabled    Boolean                @default(false)
-  twoFactorConfirmation TwoFactorConfirmation?
-  candidateTimeline   CandidateTimeline[]
+  id                       String                     @id @default(cuid())
+  name                     String?
+  email                    String?                    @unique
+  emailVerified            DateTime?
+  image                    String?
+  password                 String?
+  role                     UserRole                   @default(USER)
+  accounts                 Account[]
+  organizations            OrganizationUserRole[]
+  isTwoFactorEnabled       Boolean                    @default(false)
+  twoFactorConfirmation    TwoFactorConfirmation?
+  candidateTimeline        CandidateTimeline[]
+  emailMessage             EmailMessage[]
+  organizationSubscription OrganizationSubscription[]
 }
 
 model Account {
@@ -89,16 +91,62 @@ model TwoFactorConfirmation {
 }
 
 model Organization {
-  id   String  @id @default(cuid())
-  name String
-  url  String?
-  logo String?
+  id                       String                     @id @default(cuid())
+  name                     String
+  url                      String?
+  logo                     String?
+  // isProActivated Boolean  @default(false)
+  organizationRole         OrganizationUserRole[]
+  organizationActionLog    OrganizationActivityLog[]
+  jobPost                  JobPost[]
+  payment                  Payment[]
+  jobPreview               JobPreview[]
+  organizationSubscription OrganizationSubscription[]
+  createdAt                DateTime                   @default(now())
+}
 
-  organizationRole      OrganizationUserRole[]
-  organizationActionLog OrganizationActivityLog[]
-  jobPost               JobPost[]
-  jobPreview            JobPreview[]
-  createdAt             DateTime                  @default(now())
+model OrganizationSubscription {
+  id String @id @default(cuid())
+
+  referalId        String?
+  paymentHandler   String
+  organizationId   String
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+  status           SubscriptionStatus @default(FREE)
+  subscriptionType String
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: NoAction)
+
+  createdAt DateTime @default(now())
+  expiresOn DateTime
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  organizationId  String
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  paddlePaymentId String        @unique
+  amount          Float   //Amount in Penny
+  currency        String
+  status          PaymentStatus
+  createdAt       DateTime      @default(now())
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+}
+
+enum SubscriptionStatus {
+  FREE
+  ACTIVE
+  CANCELED
+  EXPIRED
+}
+
+enum EmailDirection {
+  SENT
+  RECEIVED
 }
 
 model OrganizationUserRole {
@@ -182,22 +230,33 @@ model CandidateApplication {
   jobStage      JobStage       @relation(fields: [stageId], references: [id], onDelete: NoAction)
   formResponses FormResponse[]
 
+  emailMessage      EmailMessage[]
   CandidateTimeline CandidateTimeline[]
 }
 
-model CandidateTimeline {
-  id          String   @id @default(cuid())
-  createdAt   DateTime @default(now())
-  userId      String?
-  actionType  String
-  jobId       String
-  timelineText  String
-  comment     String?
+model CandidateReview {
+  id                String              @id @default(cuid())
+  description       String?
+  verdict           String
+  createdAt         DateTime            @default(now())
+  candidateTimeline CandidateTimeline[]
+}
 
-  candidateId String
-  candidateApplication  CandidateApplication @relation(fields: [candidateId],references: [id],onDelete: Cascade)
-  jobPost      JobPost  @relation(fields: [jobId], references: [id])
-  user       User?       @relation(fields: [userId], references: [id])
+model CandidateTimeline {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  userId       String?
+  actionType   String
+  jobId        String
+  timelineText String
+  comment      String?
+  reviewId     String?
+  candidateId  String
+
+  candidateReview      CandidateReview?     @relation(fields: [reviewId], references: [id])
+  candidateApplication CandidateApplication @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobPost              JobPost              @relation(fields: [jobId], references: [id])
+  user                 User?                @relation(fields: [userId], references: [id])
 }
 
 model FormResponse {
@@ -237,4 +296,26 @@ model JobStage {
   createdAt DateTime @default(now())
 
   candidateStage CandidateApplication[]
+}
+
+model EmailMessage {
+  id              String               @id @default(uuid()) // Unique ID for the database
+  messageId       String               @unique // The Message-ID of the email
+  parentMessageId String?              @unique // In-Reply-To (if it's a reply)
+  sender          String // Email of the sender
+  recipient       String // Email of the recipient
+  subject         String
+  body            String // Full email content
+  s3Url           String? // Optional, if email is stored in S3
+  direction       EmailDirection // SENT or RECEIVED
+  createdAt       DateTime             @default(now())
+  userId          String
+  candidateId     String
+  // Relations
+  user            User                 @relation(fields: [userId], references: [id])
+  candidate       CandidateApplication @relation(fields: [candidateId], references: [id])
+  parentMessage   EmailMessage?        @relation("MessageThread", fields: [parentMessageId], references: [messageId])
+  replies         EmailMessage[]       @relation("MessageThread")
+
+  @@index([parentMessageId]) // Index for faster lookups
 }

@@ -10,7 +10,7 @@ import { redirect } from 'next/navigation'
 const ManageOrganization = async () => {
     const user = await currentUser()
     if (!user) {
-        redirect('/login')
+        redirect('/auth/login')
     }
     const userOrganization = await getOrganization({ userID: user.id ?? '' })
     return (

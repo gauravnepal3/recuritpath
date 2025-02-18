@@ -7,6 +7,7 @@ import {
     CreditCard,
     LogOut,
     Sparkles,
+    User,
 } from "lucide-react"
 
 import {
@@ -30,6 +31,8 @@ import {
     useSidebar,
 } from "@repo/ui/components/sidebar"
 import { signOut } from "next-auth/react"
+import { logout } from "@/actions/logout"
+import Link from "next/link"
 
 export function NavUser({
     user,
@@ -82,17 +85,12 @@ export function NavUser({
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
-                            <DropdownMenuItem>
-                                <Sparkles />
-                                Upgrade to Pro
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem>
-                                <BadgeCheck />
+                            <Link href={'/account'} className="cursor-pointer">
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <User />
                                 Account
                             </DropdownMenuItem>
+                            </Link>
                             <DropdownMenuItem>
                                 <CreditCard />
                                 Billing
@@ -103,7 +101,7 @@ export function NavUser({
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => { signOut(); }}>
+                        <DropdownMenuItem className="cursor-pointer" onClick={() => { logout(); }}>
                             <LogOut />
                             Log out
                         </DropdownMenuItem>
