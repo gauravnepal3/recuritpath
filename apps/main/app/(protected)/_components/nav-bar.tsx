@@ -36,7 +36,9 @@ import Link from "next/link"
 
 export function NavUser({
     user,
+    organizationTier
 }: {
+        organizationTier: string
     user: {
         name: string
         email: string
@@ -84,7 +86,16 @@ export function NavUser({
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
+
                         <DropdownMenuGroup>
+                            {organizationTier === "Free" &&
+                                <Link href={'/pricing'} className="cursor-pointer">
+                                    <DropdownMenuItem className="cursor-pointer">
+                                        <Sparkles />
+                                        Upgrade to Pro
+                                    </DropdownMenuItem>
+                                </Link>
+                            }
                             <Link href={'/account'} className="cursor-pointer">
                                 <DropdownMenuItem className="cursor-pointer">
                                     <User />

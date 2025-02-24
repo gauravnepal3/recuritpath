@@ -7,15 +7,16 @@ export const getOrganizationTier = async () => {
     if (!user) {
         redirect('/auth/login')
     }
-    const activeOrganization = (await cookies()).get('organization')?.value
+    const cookiesProvider = await cookies()
+    const activeOrganization = cookiesProvider.get('organization')?.value
     if (!activeOrganization) {
-        redirect('/')
+        redirect('/organization/manage')
     }
     const organizationTier = await prisma.organizationSubscription.findFirst({
         where: {
             organizationId: activeOrganization
         }
     })
-    if (!organizationTier) return 'FREE';
+    if (!organizationTier) return 'Free';
     return organizationTier?.subscriptionType
 }

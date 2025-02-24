@@ -72,7 +72,7 @@ export const sendMessage = async ({
             to: ['gauravnepal3@gmail.com'],
             body: body,
             from: "career@requro.com",
-            subject: "Test Email",
+            subject: "You have a new message.",
             htmlTemplate: {
                 filePath: path.join(process.cwd(), "mailTemplates", "newMessage.hbs"),
                 context: {

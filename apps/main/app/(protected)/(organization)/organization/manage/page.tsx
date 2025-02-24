@@ -33,7 +33,7 @@ const ManageOrganization = async () => {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="">
-                                            <Badge className='font-normal text-xs text-muted-foreground' variant={'outline'}>{x.organizationRole.find(x => x.user.email === user.email)?.role}</Badge>
+                                            <Badge className='font-normal text-xs text-muted-foreground' variant={'outline'}>{x.organizationRole.find(x => x?.user?.email === user.email)?.role}</Badge>
                                         </div>
                                         <div className="text-xs text-muted-foreground">
                                             {x.organizationRole.length} member

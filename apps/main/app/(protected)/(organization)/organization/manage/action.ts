@@ -37,6 +37,7 @@ export const createOrganization = async (userID: string, organizationName: strin
             data: {
                 organizationId: createNewOrganization.id,
                 role: "OWNER",
+                email: user.email,
                 userId: user.id
             }
         })
@@ -72,7 +73,7 @@ export const getOrganization = async ({ userID }: { userID: string }) => {
         where: {
             organizationRole: {
                 some: {
-                    userId: userID
+                    email: user.email
                 }
             }
         },

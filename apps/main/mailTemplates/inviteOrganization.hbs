@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're invited.</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .header img {
+            max-width: 150px;
+        }
+
+        .content {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .message-preview {
+            background: #f8f8f8;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-style: italic;
+        }
+
+        .button {
+            display: block;
+            width: 200px;
+            text-align: center;
+            background: #007bff;
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            margin: 20px auto;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{companyLogo}}" alt="Company Logo">
+        </div>
+        <div class="content">
+            <p>Hello {{email}},</p>
+            <p>You're invited to <strong>{{companyName}}</strong>. This invite allows you to access the platform as
+                <strong>{{role}}</strong>.
+            </p>
+        </div>
+        <a href="{{acceptLink}}" class="button">Accept Invitation</a>
+        <div class="footer">
+            <p>Best regards, <br> {{companyName}}</p>
+        </div>
+    </div>
+</body>
+
+</html>

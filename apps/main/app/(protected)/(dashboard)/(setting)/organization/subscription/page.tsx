@@ -5,7 +5,6 @@ import { Lock } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import React from 'react'
 import { FcGoogle } from "react-icons/fc";
-import { ThemeToogler } from './_components/ThemeToogler';
 
 const Account = async () => {
     const user = await currentUser();
@@ -55,12 +54,6 @@ const Account = async () => {
                         </>
                     }
                 </div>
-            </div>
-            <div className="mt-4 flex gap-x-10 items-center">
-                <div className="text-muted-foreground pl-4 text-xs">
-                    Theme
-                </div>
-                <ThemeToogler />
             </div>
             {/* TODO: Change Password */}
             {/* {user.isOAuth &&

@@ -8,6 +8,8 @@ import { currentUser } from "@/lib/auth";
 import Link from "next/link";
 import { AddJobDialog } from "../_components/AddJobDialog";
 import { prisma } from "@repo/database"
+import { Badge } from "@repo/ui/components/badge";
+import { Inbox, User } from "lucide-react";
 const font = Poppins({
   subsets: ["latin"],
   weight: ["600"]
@@ -16,7 +18,20 @@ const font = Poppins({
 const getJobDetails = async (userID: string, organizationID: string) => {
   return await prisma.jobPost.findMany({
     where: {
-      organizationId: organizationID
+      organizationId: organizationID,
+    },
+    include: {
+      candidateApplication: {
+        select: {
+          _count: true,
+          jobStage: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      }
     }
   })
 }
@@ -47,10 +62,35 @@ export default async function Home() {
               <span className='text-xs text-muted-foreground'>No Jobs</span>
             </div> : <div className='flex-col space-y-5'>
               {jobDetails.map(x => (
-                <Link href={`/jobs/${x.id}/setting`} key={x.id} className="w-full flex items-center justify-between rounded-lg px-3 py-4 border hover:border-primary">
-                  <div className="">
-                    <div className="font-bold">
-                      {x.title}
+                <Link href={`/jobs/${x.id}/setting`} key={x.id} className="w-full flex items-center justify-between rounded-lg px-3 py-4 border hover:bg-sidebar-accent">
+                  <div className="grid grid-cols-3 gap-x-2 w-full h-full">
+                    <div className="col-span-2">
+                      <div className="font-bold">
+                        {x.title}
+                      </div>
+                      <div className="mt-4">
+                        {x.country &&
+                          <Badge variant={'outline'}>
+                            {x.country?.split('/')[0]}
+                          </Badge>
+                        }
+                      </div>
+                    </div>
+                    <div className="col-span-1 border-l-2 flex flex-col space-y-2">
+                      <div className="flex gap-x-2 text-xs items-center justify-center text-muted-foreground">
+                        <User className="size-4" />
+                        Total
+                        <span>
+                          {x.candidateApplication.length}
+                        </span>
+                      </div>
+                      <div className="flex gap-x-2 text-xs items-center justify-center text-muted-foreground">
+                        <Inbox className="size-4" />
+                        Inbox
+                        <span>
+                          {x.candidateApplication.filter(x => x.jobStage.name === "Inbox").length}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Link>

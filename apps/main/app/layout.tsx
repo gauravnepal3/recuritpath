@@ -5,6 +5,7 @@ import { auth } from '@/auth'
 import '@repo/ui/globals.css'
 import { Toaster } from "@repo/ui/components/sonner";
 import { CookiesProvider } from 'next-client-cookies/server';
+import { Providers } from '@/components/providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -21,8 +22,9 @@ export default async function RootLayout({
 
   return (
     <SessionProvider session={session}>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
+          <Providers>
           <Toaster
             toastOptions={{
               unstyled: false,
@@ -34,6 +36,7 @@ export default async function RootLayout({
           <CookiesProvider>
           {children}
           </CookiesProvider>
+          </Providers>
         </body>
       </html>
     </SessionProvider>

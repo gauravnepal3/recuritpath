@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArchiveX, Command, File, Inbox, Send, Trash2 } from "lucide-react"
+import { ArchiveX, Command, File, Inbox, Send, Settings, Trash2 } from "lucide-react"
 
 import { NavUser } from "./nav-bar"
 import { Label } from "@repo/ui/components/label"
@@ -23,12 +23,15 @@ import Link from "next/link"
 import { currentUser } from "@/lib/auth"
 import { ExtendedUser } from "next-auth"
 import { UserRole } from "@repo/database"
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@repo/ui/components/button"
 
 
 interface AppSidebarProps {
 
     user: (ExtendedUser & { role: UserRole; isTwoFactorEnabled: boolean; isOAuth: boolean; }) | undefined;
-    organizationDetails: any
+    organizationDetails: any,
+    organizationTier: string
 }
 // This is sample data
 const data = {
@@ -39,7 +42,7 @@ const data = {
     },
 }
 
-export function AppSidebar({ user, organizationDetails }: AppSidebarProps) {
+export function AppSidebar({ user, organizationDetails, organizationTier }: AppSidebarProps) {
     // Note: I'm using state to show active item.
     // IRL you should use the url/router.
     const { setOpen } = useSidebar()
@@ -72,7 +75,10 @@ export function AppSidebar({ user, organizationDetails }: AppSidebarProps) {
                 <SidebarContent>
                 </SidebarContent>
                 <SidebarFooter>
-                    <NavUser user={user ? { email: user.email ?? "", avatar: user.image ?? "", name: user.name ?? "" } : data.user} />
+                    <Link className={cn(buttonVariants({ variant: 'ghost' }), 'mb-3 cursor-pointer')} href="/organization/setting">
+                        <Settings className="w-5 h-5" width={20} height={20} />
+                    </Link>
+                    <NavUser organizationTier={organizationTier} user={user ? { email: user.email ?? "", avatar: user.image ?? "", name: user.name ?? "" } : data.user} />
                 </SidebarFooter>
             </Sidebar>
         </Sidebar>

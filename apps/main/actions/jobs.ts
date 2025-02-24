@@ -231,7 +231,7 @@ export const createJobPost = async <T>(userID: string, title: string, organizati
             include: {
                 organizationRole: {
                     where: {
-                        userId: userID
+                        userId: user.id
                     },
                     select: {
                         role: true
@@ -320,7 +320,7 @@ export const updateJobDetails = async ({ userID, organizationID, jobID, data }: 
             include: {
                 organizationRole: {
                     where: {
-                        userId: userID
+                        email: user.email
                     },
                     select: {
                         role: true
@@ -439,7 +439,7 @@ export const updateJobDescription = async ({ userID, jobID, description, organiz
             include: {
                 organizationRole: {
                     where: {
-                        userId: userID
+                        email: user.email
                     },
                     select: {
                         role: true
@@ -1057,7 +1057,7 @@ export const getOrganization = async ({ userID }: { userID: string }) => {
         where: {
             organizationRole: {
                 some: {
-                    userId: userID
+                    email: user.email
                 }
             }
         },

@@ -18,11 +18,12 @@ import {
 import { prisma } from '@repo/database'
 import { currentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getOrganizationTier } from "@/lib/subscription";
 interface ProtectedLayoutProps {
   children: React.ReactNode;
 };
 
-const getOrganizationDetails = async (organizationID: string, userID: string) => {
+const getOrganizationDetails = async (organizationID: string, userID: string, email: string) => {
   return prisma.organization.findFirst({
     where: {
       id: organizationID
@@ -30,7 +31,7 @@ const getOrganizationDetails = async (organizationID: string, userID: string) =>
     include: {
       organizationRole: {
         where: {
-          userId: userID
+          email: email
         },
         select: {
           role: true
@@ -45,10 +46,11 @@ const ProtectedLayout = async ({ children }: ProtectedLayoutProps) => {
   const user = await currentUser()
   const cookieStore = await cookies()
   const organization = cookieStore.get('organization')
+  const organizationTier = await getOrganizationTier()
   if (!organization) {
     redirect('/organization/manage')
   }
-  const organizationDetails = await getOrganizationDetails(organization.value, user?.id ?? '')
+  const organizationDetails = await getOrganizationDetails(organization.value, user?.id ?? '', user.email ?? '')
   if (!organizationDetails) {
     redirect('/organization/manage')
   }
@@ -61,7 +63,7 @@ const ProtectedLayout = async ({ children }: ProtectedLayoutProps) => {
           } as React.CSSProperties
         }
       >
-        <AppSidebar user={user} organizationDetails={organizationDetails} />
+        <AppSidebar user={user} organizationTier={organizationTier} organizationDetails={organizationDetails} />
         <SidebarInset>
           <div className="flex flex-1 flex-col gap-4">
             {children}

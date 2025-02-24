@@ -1,5 +1,14 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { redirect } from "next/navigation";
+import { currentUser } from "./auth";
+import { prisma } from "@repo/database"
+
+const roleGuard = [
+  {
+    action: "ADD MEMBER", role: ['OWNER', 'ADMIN']
+  }
+]
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -32,3 +41,29 @@ export function timeAgo(dateInput: Date) {
   }
 }
 
+
+
+export async function userDetails() {
+  const user = await currentUser();
+  if (!user) {
+    redirect('/auth/login')
+  }
+  return user
+}
+
+export async function organizationRoleGuard({ email, organizationId, action }: { email: string, organizationId: string, action: string }): Promise<boolean> {
+  const userRole = await prisma.organizationUserRole.findFirst({
+    where: {
+      email: email,
+      organizationId: organizationId
+    }
+  })
+  const currentAction = roleGuard.find(x => x.action === action)
+  if (!currentAction) {
+    return false
+  }
+  if (currentAction.role.includes(userRole?.role ?? 'VIEWER')) {
+    return true
+  }
+  return false
+}

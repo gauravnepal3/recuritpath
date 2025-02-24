@@ -10,7 +10,8 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command }
 import { v4 as uuidv4 } from "uuid";
 import { writeFile } from "fs/promises";
 import { s3Client } from "@/lib/s3";
-
+import { organizationRoleGuard, userDetails } from "@/lib/utils";
+import jwt from "jsonwebtoken"
 interface SuccessResponse<T = any> {
     type: "SUCCESS";
     message: string;
@@ -121,5 +122,87 @@ export async function uploadOrganizationImage({ organizationId, file }: { organi
 }
 
 
+import { OrganizationRole } from "@repo/database";
+
+export async function addTeamMember({ organizationId, userId, email, role }: { organizationId: string, userId: string, email: string, role: OrganizationRole }): Promise<SuccessResponse<any> | ErrorResponse> {
+    try {
+
+        const user = await userDetails();
+        const organizationDetails = await prisma.organization.findFirst({
+            where: {
+                id: organizationId
+            }
+        })
+        if (!organizationDetails) {
+            return {
+                type: "ERROR",
+                message: "Invalid request made!"
+            }
+        }
+        const roleGuard = await organizationRoleGuard({
+            action: "ADD MEMBER",
+            organizationId: organizationId,
+            email: user.email
+        })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "403 Unauthorized action. Contact the owner."
+            }
+        }
+        console.log({
+            role: role.toLocaleUpperCase() as OrganizationRole,
+            organizationId: organizationDetails.id,
+            email: email,
+            status: "PENDING"
+        })
+        const addTeamMember = await prisma.organizationUserRole.create({
+            data: {
+                role: role.toLocaleUpperCase() as OrganizationRole,
+                organizationId: organizationDetails.id,
+                email: email,
+                status: "PENDING"
+            }
+        })
+        await sendEmail({
+            to: [email],
+            body: '',
+            from: "career@requro.com",
+            subject: "You're invited.",
+            htmlTemplate: {
+                filePath: path.join(process.cwd(), "mailTemplates", "inviteOrganization.hbs"),
+                context: {
+                    companyLogo: `${process.env.S3_PUBLIC_URL}/${organizationDetails.logo}`,
+                    email: email,
+                    companyName: organizationDetails.name,
+                    role: role,
+                    acceptLink: generateInviteLink(addTeamMember.id, email, organizationDetails.id)
+                }
+            }
+        })
+        revalidatePath(`/organization/setting`)
+        return {
+            type: "SUCCESS",
+            message: "SUCCESS",
+            data: addTeamMember
+        }
+
+    } catch (err) {
+        console.log(err)
+        return {
+            type: "ERROR",
+            message: "Something went wrong!"
+        }
+    }
+}
+
+const generateInviteLink = (inviteID: string, email: string, organizationId: string) => {
+    const token = jwt.sign({
+        inviteId: inviteID,
+        email: email,
+        organization: organizationId
+    }, `${process.env.AUTH_SECRET}`)
+    return `${process.env.NEXT_PUBLIC_APP_URL}/api/organization/invite?inviteId=${token}`
+}
 
 

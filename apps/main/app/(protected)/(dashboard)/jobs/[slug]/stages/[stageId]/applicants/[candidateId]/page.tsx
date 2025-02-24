@@ -181,7 +181,7 @@ const CandidatePage = async ({
                                             </div>
                                         </div>
 
-                                        <p className="text-sm text-gray-800">{item.comment}</p>
+                                            <p className="text-sm text-gray-800 dark:text-gray-300">{item.comment}</p>
                                             {item.type === "REVIEW" &&
                                                 <div className="mt-3">
                                                     <TipTapHTMLRenderer content={item.reviewComment ?? ''} />

@@ -74,14 +74,14 @@ export default function OrganizationImage({ organizationID, image }: { organizat
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex gap-x-4 items-center">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 flex gap-x-4 mt-2 items-center">
                 {/* File Input */}
                 <FormField
                     control={form.control}
                     name="file"
                     render={({ field }) => (
                         <FormItem className="space-y-1">
-                            <FormLabel className="text-muted-foreground text-xs">Organization Logo</FormLabel>
+                            <FormLabel className="text-muted-foreground text-xs mb-2">Organization Logo</FormLabel>
                             <FormControl>
                                 <div className="flex gap-2 ">
                                     {previewUrl ? (

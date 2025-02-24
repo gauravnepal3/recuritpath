@@ -14,10 +14,21 @@ interface PathParams {
 interface Props {
     userEmail?: string;
     organizationId: string
-    userId: string
+    userId: string,
+    organizationSubscription: {
+        id: string;
+        referalId: string | null;
+        paymentHandler: string;
+        organizationId: string;
+        status: string;
+        subscriptionType: string;
+        userId: string;
+        createdAt: Date;
+        expiresOn: Date;
+    } | null
 }
 
-export function CheckoutContents({ userEmail, organizationId, userId }: Props) {
+export function CheckoutContents({ organizationSubscription, userEmail, organizationId, userId }: Props) {
     const { priceId } = useParams<PathParams>();
     const [quantity, setQuantity] = useState<number>(1);
     const [paddle, setPaddle] = useState<Paddle | null>(null);
@@ -81,11 +92,13 @@ export function CheckoutContents({ userEmail, organizationId, userId }: Props) {
         >
             <div className={'flex flex-col md:flex-row gap-8 md:gap-16'}>
                 <div className={'w-full md:w-[400px]'}>
+                    {/* {!organizationSubscription} */}
                     <PriceSection checkoutData={checkoutData} quantity={quantity} handleQuantityChange={setQuantity} />
                 </div>
                 <div className={'min-w-[375px] lg:min-w-[535px]'}>
                     <div className={'text-base leading-[20px] font-semibold mb-3'}>Payment details</div>
-                    <div className={'paddle-checkout-frame'} />
+                    <div className={'paddle-checkout-frame'} ></div>
+
                 </div>
             </div>
         </div>
