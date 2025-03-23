@@ -104,7 +104,6 @@ export function AdditionalQuestionDialog({ userID, jobID }: { userID: string, jo
     }
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values)
         // Check for empty options before final submission
         if (values.dataType.includes("Multiple Choice Question")) {
             if (!options.every((option) => option.trim() !== "")) {
@@ -152,7 +151,7 @@ export function AdditionalQuestionDialog({ userID, jobID }: { userID: string, jo
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="secondary">Add Additional Questions</Button>
+                <Button className="font-light" variant="secondary">Add Additional Questions</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
@@ -235,7 +234,7 @@ export function AdditionalQuestionDialog({ userID, jobID }: { userID: string, jo
                                         type="button"
                                         variant="secondary"
                                         onClick={addOption}
-                                        className="w-full"
+                                        className="w-full font-light"
                                     >
                                         <Plus className="mr-2 w-4 h-4" />
                                         Add Option

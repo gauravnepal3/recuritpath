@@ -45,7 +45,6 @@ export default function OrganizationImage({ organizationID, image }: { organizat
 
     // Handle Form Submission
     const onSubmit = async (values: FileFormValues) => {
-        console.log("Uploading File:", values.file);
         try {
             const promise = uploadOrganizationImage({ organizationId: organizationID, file: values.file })
             toast.promise(

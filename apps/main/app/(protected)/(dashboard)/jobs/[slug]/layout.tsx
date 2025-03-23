@@ -11,6 +11,7 @@ import { SidebarInset, SidebarProvider } from '@repo/ui/components/sidebar';
 import { AppSidebar } from './_components/app-sidebar';
 import GeneratePreviewJob from '@/app/(protected)/_components/GeneratePreviewJob';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
+import { format } from 'date-fns';
 interface ProtectedLayoutProps {
     children: React.ReactNode,
     params: Promise<{ slug: string }>
@@ -24,7 +25,7 @@ const getJobDetails = async (organizationID: string, userID: string, jobID: stri
                 organizationRole: {
                     some: {
                         userId: userID,
-                        role: "OWNER"
+                        // role: "OWNER"
                     }
                 }
             }
@@ -74,7 +75,7 @@ const JobLayout = async ({ children, params }: ProtectedLayoutProps) => {
                     <Link className={cn(buttonVariants({ variant: "ghost" }), 'w-8 h-8 p-2')} href={'/'}>
                         <ArrowLeft className='size-7' />
                     </Link>
-                    <div className="flex gap-x-2">
+                    <div className="flex items-center gap-x-2">
                         <div className="font-semibold text-lg">
                             {jobDetails.title}
                         </div>
@@ -85,9 +86,19 @@ const JobLayout = async ({ children, params }: ProtectedLayoutProps) => {
                     </div>
                 </div>
             </div>
+
             {!jobDetails.isPublished &&
                 <div className="text-center bg-primary text-secondary text-xs py-2">
+                    {(!jobDetails.isPublished && !jobDetails.isScheduled) &&
+                        <>
                     This job isn&apos;t published
+                        </>
+                    }
+                    {(!jobDetails.isPublished && jobDetails.isScheduled) &&
+                        <>
+                            This job is scheduled to be published on {format(new Date(jobDetails.dateStart!), 'yyyy-MM-dd')}
+                        </>
+                    }
                 </div>
             }
             <div className="flex flex-1">

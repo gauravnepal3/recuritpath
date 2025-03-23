@@ -21,7 +21,7 @@ export function AddOrganizationDialog({ userID }: { userID: string }) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>Add</Button>
+                <Button className="font-light">Add</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>

@@ -13,7 +13,7 @@ import {
     SidebarRail,
 } from "@repo/ui/components/sidebar"
 import { NavSecondary } from "./nav-secondary"
-import { Archive, Folder, Inbox, LifeBuoy, Send, Settings } from "lucide-react"
+import { Archive, BrainCircuit, Folder, Inbox, LifeBuoy, Send, Settings } from "lucide-react"
 import { JobStages } from "./job-stages"
 import { Separator } from "@repo/ui/components/separator"
 import { JobPost } from "@prisma/client"
@@ -61,12 +61,17 @@ export function AppSidebar({ jobDetails }: AppSidebarProps) {
             }),
         navSecondary: [
             {
+                title: "Screening",
+                url: `/jobs/${jobDetails.id}/screening`,
+                icon: BrainCircuit,
+            },
+            {
                 title: "Setting",
                 url: `/jobs/${jobDetails.id}/setting`,
                 icon: Settings,
             },
             {
-                title: "Feedback",
+                title: "Share",
                 url: "#",
                 icon: Send,
             },

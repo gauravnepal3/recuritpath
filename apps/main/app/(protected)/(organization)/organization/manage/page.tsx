@@ -41,7 +41,7 @@ const ManageOrganization = async () => {
                                     </div>
                                 </div>
                                 <div className="">
-                                    <OrganizationSetButton organizationID={x.id} />
+                                    <OrganizationSetButton userID={user.id} organizationID={x.id} />
                                 </div>
                             </div>
                         ))}

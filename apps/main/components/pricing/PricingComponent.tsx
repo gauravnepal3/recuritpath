@@ -28,7 +28,10 @@ export function PricingComponent({ country }: Props) {
     }, []);
 
     return (
-        <div className="mx-auto max-w-7xl relative px-[32px] flex flex-col items-center justify-between">
+        <div className="mx-auto max-w-7xl pt-8 relative px-[32px] flex flex-col items-center justify-between">
+            <div className="text-5xl font-bold text-center text-primary mb-5">
+                Find the perfect plan for your team
+            </div>
             <PriceCards frequency={frequency} loading={loading} priceMap={prices} />
         </div>
     );

@@ -105,7 +105,6 @@ export default function MyForm({ formDetails }: { formDetails: FormDetailsType[]
     });
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        // console.log("Hello")
         try {
             if (!executeRecaptcha) {
                 toast.error("reCAPTCHA not loaded. Please try again.");
@@ -245,7 +244,7 @@ export default function MyForm({ formDetails }: { formDetails: FormDetailsType[]
 
                         <Button
                             disabled={loading}
-                            type="submit">Submit</Button>
+                            type="submit">Apply</Button>
                     </form>
                 </Form>
             }

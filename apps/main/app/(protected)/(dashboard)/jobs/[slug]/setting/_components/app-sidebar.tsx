@@ -16,6 +16,7 @@ import { NavSecondary } from "./nav-secondary"
 import { Archive, Folder, Inbox, LifeBuoy, Send, Settings } from "lucide-react"
 import { Separator } from "@repo/ui/components/separator"
 import { JobPost } from "@prisma/client"
+import { JobPublishDialog } from "./JobPublishDialog"
 interface AppSidebarProps {
 
     jobDetails: JobPost &
@@ -29,16 +30,16 @@ interface AppSidebarProps {
     }
 }
 
-export function AppSidebar({ jobId }: { jobId: string }) {
+export function AppSidebar({ jobDetails, jobId, organizationID, userID }: { jobDetails: any, organizationID: string, userID: string, jobId: string }) {
     // This is sample data.
     const data = {
         navSecondary: [
             {
-                title: "Job details",
+                title: "Job Details",
                 url: `/jobs/${jobId}/setting`,
             },
             {
-                title: "Job description",
+                title: "Job Description",
                 url: `/jobs/${jobId}/setting/description`,
             },
             {
@@ -46,12 +47,12 @@ export function AppSidebar({ jobId }: { jobId: string }) {
                 url: `/jobs/${jobId}/setting/application`
             },
             {
-                title: "Hiring stages",
+                title: "Hiring Stages",
                 url: `/jobs/${jobId}/setting/stages`,
             },
             {
-                title: "Automation",
-                url: `/jobs/${jobId}/setting/automation`,
+                title: "Mailing Template",
+                url: `/jobs/${jobId}/setting/mailing-templates`,
             },
         ],
     }
@@ -63,8 +64,11 @@ export function AppSidebar({ jobId }: { jobId: string }) {
             <SidebarContent>
                 <SidebarGroupLabel className="pl-3 pt-3 text-sm font-bold text-primary">Setting</SidebarGroupLabel>
                 <NavSecondary items={data.navSecondary} />
+                <SidebarGroupLabel className="mt-3">
+                    <JobPublishDialog jobDetails={jobDetails} userID={userID} organizationID={organizationID} jobID={jobId} />
+                </SidebarGroupLabel>
             </SidebarContent>
-            <SidebarRail />
+            {/* <SidebarRail /> */}
         </Sidebar>
     )
 }

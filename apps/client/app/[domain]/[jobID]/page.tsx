@@ -8,12 +8,12 @@ const JobDetails =
         params,
         searchParams,
     }: {
-        params: Promise<{ slug: string, jobID: string }>,
+        params: Promise<{ domain: string, jobID: string }>,
         searchParams: Promise<{
             [key: string]: string | string[] | undefined
         }>;
     }) => {
-        const slug = (await params).slug
+        const slug = (await params).domain
         const jobID = (await params).jobID
         const { preview } = await searchParams
         const isPreview = slug === "preview"
@@ -25,7 +25,7 @@ const JobDetails =
             )
         }
         return (
-            <JobDetailsPages jobID={slug} />
+            <JobDetailsPages jobID={jobID} />
         )
     }
 

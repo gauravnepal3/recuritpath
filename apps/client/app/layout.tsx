@@ -37,7 +37,7 @@ export default function RootLayout({
             {children}
           </div>
           <footer className="py-7 text-xs text-center">
-            Powered by RecruitPath
+            Powered by Requro
           </footer>
         </Providers>
 

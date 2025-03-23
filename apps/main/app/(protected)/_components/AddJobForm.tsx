@@ -38,7 +38,6 @@ export function AddJobForm({ userID, organizationID, setOpen }: { userID: string
             promise.then((response) => {
                 // Check the custom response type
                 if (response.type === "ERROR") {
-                    console.log(response)
                     throw new Error(response.message); // Throw error to trigger the `error` toast
                 }
                 return response; // Success case, pass the message for the `success` toast

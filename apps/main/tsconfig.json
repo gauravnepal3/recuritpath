@@ -50,7 +50,9 @@
     "../../packages/ui/src/components/toggle.tsx",
     "../../packages/ui/src/components/tooltip.tsx",
     "../../packages/ui/src/components/minimal-tiptap/minimal-tiptap.tsx",
-    "../../packages/ui/src/components/accordion.tsx"
+    "../../packages/ui/src/components/accordion.tsx",
+    "../../packages/ui/src/components/calendar.tsx",
+    "../../packages/ui/src/components/radio-group.tsx"
   ],
   "exclude": ["node_modules"]
 }

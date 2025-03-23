@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from "uuid";
 import { writeFile } from "fs/promises";
 import { s3Client } from "@/lib/s3";
 import { organizationRoleGuard, userDetails } from "@/lib/utils";
-import jwt from "jsonwebtoken"
+import * as jose from 'jose'
 interface SuccessResponse<T = any> {
     type: "SUCCESS";
     message: string;
@@ -22,6 +22,37 @@ interface ErrorResponse {
     type: "ERROR";
     message: string;
     data?: never; // Optional and explicitly not allowed for "ERROR"
+}
+
+const secret = new TextEncoder().encode(process.env.AUTH_SECRET ?? '');
+
+export const setActiveOrganization = async ({ organizationId, userId }: { organizationId: string, userId: string }) => {
+    const user = await userDetails();
+    if (userId !== user.id) {
+        redirect('/auth/login')
+    }
+    const role = await prisma.organizationUserRole.findFirst({
+        where: {
+            organizationId: organizationId,
+            userId: user.id
+        }
+    })
+    const cookiesProvider = await cookies();
+    const token = await new jose.SignJWT({
+        organizationId,
+        userRole: role?.role
+    })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime('24h')
+        .sign(secret);
+
+    cookiesProvider.delete('organizationRole')
+    cookiesProvider.set('organizationRole', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+    })
 }
 
 export const updateOrganizationName = async ({ organizationName, organizationId }: { organizationName: string, organizationId: string }): Promise<SuccessResponse<Organization> | ErrorResponse> => {
@@ -57,6 +88,93 @@ export const updateOrganizationName = async ({ organizationName, organizationId 
 
 }
 
+export const addDomain = async ({ organizationId, domainName }: { organizationId: string, domainName: string }): Promise<SuccessResponse<Organization> | ErrorResponse> => {
+    const user = await currentUser();
+    if (!user?.id) {
+        redirect('/login')
+    }
+    const organizationDetails = await prisma.organization.findFirst({
+        where: {
+            id: organizationId
+        }
+    })
+    const organizationRole = await organizationRoleGuard({
+        action: "ADD DOMAIN",
+        organizationId: organizationId,
+        email: user.email
+    })
+    if (!organizationRole) {
+        return {
+            type: "ERROR",
+            message: "403 Unauthorized action. Contact the owner."
+        }
+    }
+    if (!organizationDetails) {
+        return {
+            type: "ERROR",
+            message: "Invalid request"
+        }
+    }
+    const updatedOrganizaiton = await prisma.organization.update({
+        where: {
+            id: organizationId
+        },
+        data: {
+            customDomain: domainName
+        }
+    })
+    revalidatePath(`/account/organization`)
+    return {
+        type: 'SUCCESS',
+        message: 'Success',
+        data: updatedOrganizaiton
+    }
+
+}
+
+export const deleteDomain = async ({ organizationId, domainName }: { organizationId: string, domainName: string }): Promise<SuccessResponse<Organization> | ErrorResponse> => {
+    const user = await currentUser();
+    if (!user?.id) {
+        redirect('/login')
+    }
+    const organizationDetails = await prisma.organization.findFirst({
+        where: {
+            id: organizationId
+        }
+    })
+    const organizationRole = await organizationRoleGuard({
+        action: "REMOVE DOMAIN",
+        organizationId: organizationId,
+        email: user.email
+    })
+    if (!organizationRole) {
+        return {
+            type: "ERROR",
+            message: "403 Unauthorized action. Contact the owner."
+        }
+    }
+    if (!organizationDetails) {
+        return {
+            type: "ERROR",
+            message: "Invalid request"
+        }
+    }
+    const updatedOrganizaiton = await prisma.organization.update({
+        where: {
+            id: organizationId
+        },
+        data: {
+            customDomain: null
+        }
+    })
+    revalidatePath(`/account/organization`)
+    return {
+        type: 'SUCCESS',
+        message: 'Success',
+        data: updatedOrganizaiton
+    }
+
+}
 
 
 
@@ -123,6 +241,7 @@ export async function uploadOrganizationImage({ organizationId, file }: { organi
 
 
 import { OrganizationRole } from "@repo/database";
+import { cookies } from "next/headers";
 
 export async function addTeamMember({ organizationId, userId, email, role }: { organizationId: string, userId: string, email: string, role: OrganizationRole }): Promise<SuccessResponse<any> | ErrorResponse> {
     try {
@@ -176,7 +295,7 @@ export async function addTeamMember({ organizationId, userId, email, role }: { o
                     email: email,
                     companyName: organizationDetails.name,
                     role: role,
-                    acceptLink: generateInviteLink(addTeamMember.id, email, organizationDetails.id)
+                    acceptLink: await generateInviteLink(addTeamMember.id, email, organizationDetails.id)
                 }
             }
         })
@@ -196,12 +315,15 @@ export async function addTeamMember({ organizationId, userId, email, role }: { o
     }
 }
 
-const generateInviteLink = (inviteID: string, email: string, organizationId: string) => {
-    const token = jwt.sign({
+const generateInviteLink = async (inviteID: string, email: string, organizationId: string) => {
+    const token = await new jose.SignJWT({
         inviteId: inviteID,
-        email: email,
+        email,
         organization: organizationId
-    }, `${process.env.AUTH_SECRET}`)
+    })
+        .setProtectedHeader({ alg: 'HS256' })
+        .sign(secret);
+
     return `${process.env.NEXT_PUBLIC_APP_URL}/api/organization/invite?inviteId=${token}`
 }
 

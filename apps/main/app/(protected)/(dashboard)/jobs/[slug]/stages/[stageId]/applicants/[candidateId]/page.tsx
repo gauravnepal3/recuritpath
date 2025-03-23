@@ -13,6 +13,7 @@ import { generatePresignedUrl } from '@/lib/s3'
 import TipTapRenderer from './_components/TiptapEditorContent'
 import TipTapHTMLRenderer from './_components/TiptapEditorContent'
 import { cn } from '@repo/ui/lib/utils'
+import { RequestReview } from './_components/RequestReview'
 
 
 const getCandidateDetails = async (candidateID: string) => {
@@ -21,6 +22,7 @@ const getCandidateDetails = async (candidateID: string) => {
             id: candidateID
         },
         include: {
+
             formResponses: {
                 select: {
                     id: true,
@@ -36,7 +38,22 @@ const getCandidateDetails = async (candidateID: string) => {
                     }
                 },
             },
-            jobPost: true,
+            jobPost: {
+                include: {
+                    organization: {
+                        include: {
+                            organizationRole: {
+                                where: {
+                                    status: "ACTIVE",
+                                },
+                                select: {
+                                    email: true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             CandidateTimeline: {
                 include: {
                     user: {
@@ -55,7 +72,7 @@ const getCandidateDetails = async (candidateID: string) => {
                         }
                     }
                 }
-            }
+            },
         }
     })
 }
@@ -92,7 +109,7 @@ const CandidatePage = async ({
             case "Strong Yes":
                 return 'bg-gradient-to-r from-lime-400 to-lime-500'
             case "Yes":
-                return 'bg-gradient-to-r from-teal-200 to-teal-500'
+                return 'bg-gradient-to-r from-teal-500 to-teal-900'
             case "No":
                 return "bg-gradient-to-r from-amber-500 to-pink-500 text-white"
             case "Strong No":
@@ -116,7 +133,7 @@ const CandidatePage = async ({
                         </div>
                         {/* Timeline Content */}
                         <div className="flex-1">
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted-foreground">
                                 {candidateData?.CandidateTimeline.find(x => x.actionType === "APPLIED")?.timelineText}
                                 <span className='text-primary font-bold text-xs ml-3'>
                                     {timeAgo(candidateData?.CandidateTimeline.find(x => x.actionType === "APPLIED")?.createdAt as Date)}
@@ -124,21 +141,6 @@ const CandidatePage = async ({
                             </div>
                         </div>
                     </div>
-                    {/* Additional Question Display */}
-                    {/* <div className="relative flex items-start space-x-4 mb-8">
-                        <div className="relative -left-7 w-full ml-[30px]">
-                            <div className="mt-2 p-4 border bg-background grid place-items-center min-h-[100px] rounded">
-                                <div className="">
-                                    <div className="text-center text-sm mb-1">
-                                        No question response to display
-                                    </div>
-                                    <div className="text-xs text-muted-foreground ">
-                                        Customize additional question from setting tab
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> */}
                     {timelineData?.map((item, index) => (
                         <div key={item.id} className="relative flex items-center space-x-4 mb-4">
                             {/* Normal Timeline Events (with Icons) */}
@@ -206,9 +208,7 @@ const CandidatePage = async ({
                                 )}
 
                                 <AddComment userID={user.id} candidateID={candidateId} jobID={jobID} />
-                                <Button variant={'secondary'} className='text-xs font-normal'>
-                                    Request review
-                                </Button>
+                                <RequestReview userEmails={candidateData?.jobPost.organization.organizationRole?.map(x => x.email) ?? []} userID={user.id} candidateID={candidateId} jobID={jobID} />
                             </div>
                         </div>
                     </div>

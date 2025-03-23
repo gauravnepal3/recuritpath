@@ -21,7 +21,7 @@ export function AddTeamMember({ userId, organizationId }: { userId: string, orga
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="default">Add Member</Button>
+                <Button className="font-light" variant="default">Add Member</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>

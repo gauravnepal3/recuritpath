@@ -22,6 +22,9 @@ export default async function CheckoutPage() {
         redirect('/')
     }
     const organizationSubscription = await getOrganizationSubscription(organizationId, user.id)
+    if (organizationSubscription) {
+        redirect('/organization/billing')
+    }
     return (
         <div className={'w-full min-h-screen relative overflow-hidden'}>
             <div
@@ -31,16 +34,7 @@ export default async function CheckoutPage() {
                     <CheckoutContents organizationSubscription={organizationSubscription} userEmail={user.email} userId={user.id} organizationId={organizationId} />
                     :
                     <>
-                        <div className="grid place-items-center border rounded p-4">
-                            <div className="">
-                                You currently have an active subscription
-                            </div>
-                            <div className="text-3xl mt-4 capitalize">
-                                {
-                                    organizationSubscription.subscriptionType
-                                }
-                            </div>
-                        </div>
+
                     </>
                 }
             </div>

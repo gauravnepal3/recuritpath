@@ -3,7 +3,7 @@ import { prisma } from "@repo/database"; // Adjust path based on your setup
 import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
-
+import * as jose from 'jose'
 const SECRET_KEY = process.env.AUTH_SECRET || "your_secret_key"; // Use environment variable
 
 export async function GET(req: NextRequest) {
@@ -24,9 +24,13 @@ export async function GET(req: NextRequest) {
         // Decode the invite token
         let decoded;
         try {
-            decoded = jwt.verify(inviteId, SECRET_KEY);
+            const secret = new TextEncoder().encode(SECRET_KEY);
+            const { payload } = await jose.jwtVerify(inviteId, secret);
+            decoded = payload;
         } catch (error) {
-            return NextResponse.redirect(new URL("/invite-status?status=error&message=" + encodeURIComponent("Invalid or expired invite link"), req.url));
+            return NextResponse.redirect(
+                new URL("/invite-status?status=error&message=" + encodeURIComponent("Invalid or expired invite link"), req.url)
+            );
         }
 
 

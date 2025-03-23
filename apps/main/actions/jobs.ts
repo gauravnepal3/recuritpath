@@ -4,6 +4,7 @@ import { z } from "zod"
 import { currentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { organizationRoleGuard, userDetails } from '@/lib/utils'
 
 
 const FormSchema = z.object({
@@ -11,6 +12,27 @@ const FormSchema = z.object({
         message: "Name is required",
     }),
 })
+const jobPublishSchema = z
+    .object({
+        management: z.string({ required_error: "Please select an option." }),
+        date_range: z
+            .object({
+                from: z.date().optional(),
+                to: z.date().optional(),
+            })
+            .optional(),
+    })
+    .superRefine((data, ctx) => {
+        if (data.management === "automatic") {
+            if (!data.date_range?.from || !data.date_range?.to) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Please select a range.",
+                    path: ["date_range"],
+                });
+            }
+        }
+    });
 
 const jobUpdateSchema = z.object({
     title: z.string({ required_error: "Title is required" }).min(1, { message: "Title is required" }),
@@ -194,6 +216,14 @@ const defaultJobApplication = [
 
 export const generatePreviewID = async (organizationID: string, jobID: string) => {
     try {
+        const user = await userDetails()
+        const roleGuard = await organizationRoleGuard({ email: user.email, organizationId: organizationID, action: "GENERATE PREVIEW LINK" })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "Unauthorized action!"
+            }
+        }
         const generatePreview = await prisma.jobPreview.create({
             data: {
                 jobId: jobID,
@@ -227,16 +257,6 @@ export const createJobPost = async <T>(userID: string, title: string, organizati
         const getOrganizationDetails = await prisma.organization.findFirst({
             where: {
                 id: organizationID
-            },
-            include: {
-                organizationRole: {
-                    where: {
-                        userId: user.id
-                    },
-                    select: {
-                        role: true
-                    }
-                }
             }
         })
         if (!getOrganizationDetails) {
@@ -245,8 +265,8 @@ export const createJobPost = async <T>(userID: string, title: string, organizati
                 message: "Unable to handle the request!"
             }
         }
-
-        if (!getOrganizationDetails.organizationRole[0] || getOrganizationDetails.organizationRole[0].role !== "OWNER") {
+        const roleGuard = await organizationRoleGuard({ email: user.email, organizationId: getOrganizationDetails.id, action: "CREATE JOB" })
+        if (!roleGuard) {
             return {
                 type: "ERROR",
                 message: "You are restricted for this action!"
@@ -302,6 +322,89 @@ export const createJobPost = async <T>(userID: string, title: string, organizati
 
 }
 
+export const publishJobPost = async ({ userID, organizationID, jobID, data }: { userID: string, organizationID: string, jobID: string, data: unknown }) => {
+    try {
+        const user = await currentUser();
+        if (!user?.id) {
+            redirect('/login')
+        }
+        if (user?.id !== userID) {
+            throw new Error("Invalid user request")
+        }
+
+        const getOrganizationDetails = await prisma.organization.findFirst({
+            where: {
+                id: organizationID
+            }
+        })
+        if (!getOrganizationDetails) {
+            return {
+                type: "ERROR",
+                message: "Unable to handle the request!"
+            }
+        }
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: getOrganizationDetails.id,
+            action: "PUBLISH JOB"
+        })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "You are restricted for this action!"
+            }
+        }
+        const validatedData = jobPublishSchema.safeParse(data);
+        if (!validatedData.success) {
+            // If validation fails, throw an error with validation messages
+            return {
+                type: "ERROR",
+                message: validatedData.error.errors.map((err) => err.message).join(", ")
+            }
+
+        }
+        let updateData;
+        const { management, date_range } = validatedData.data
+        if (management === "manual") {
+            updateData = {
+                isPublished: true,
+                dateStart: null,
+                dateEnd: null
+            }
+        } else {
+            updateData = {
+                dateStart: date_range?.from ? new Date(date_range?.from) : null,
+                dateEnd: date_range?.to ? new Date(date_range?.to) : null,
+                isPublished: false,
+                isScheduled: true
+
+            }
+            if (date_range?.from === new Date()) {
+                updateData = {
+                    ...updateData,
+                    isPublished: true,
+                }
+            }
+        }
+        const jobPost = await prisma.jobPost.update({
+            where: {
+                id: jobID
+            },
+            data: updateData
+        })
+        revalidatePath(`/jobs/${jobID}/setting`)
+        return {
+            type: "SUCCESS",
+            message: "Success",
+            data: jobPost
+        }
+    } catch (err) {
+        return {
+            type: "ERROR",
+            message: "Something went wrong!"
+        }
+    }
+}
 
 export const updateJobDetails = async ({ userID, organizationID, jobID, data }: { userID: string, organizationID: string, jobID: string, data: unknown }) => {
     try {
@@ -317,16 +420,6 @@ export const updateJobDetails = async ({ userID, organizationID, jobID, data }: 
             where: {
                 id: organizationID
             },
-            include: {
-                organizationRole: {
-                    where: {
-                        email: user.email
-                    },
-                    select: {
-                        role: true
-                    }
-                }
-            }
         })
         if (!getOrganizationDetails) {
             return {
@@ -334,13 +427,18 @@ export const updateJobDetails = async ({ userID, organizationID, jobID, data }: 
                 message: "Unable to handle the request!"
             }
         }
-
-        if (!getOrganizationDetails.organizationRole[0] || getOrganizationDetails.organizationRole[0].role !== "OWNER") {
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: getOrganizationDetails.id,
+            action: "UPDATE JOB"
+        })
+        if (!roleGuard) {
             return {
                 type: "ERROR",
                 message: "You are restricted for this action!"
             }
         }
+
         const validatedData = jobUpdateSchema.safeParse(data);
         if (!validatedData.success) {
             // If validation fails, throw an error with validation messages
@@ -378,6 +476,7 @@ export const updateJobDetails = async ({ userID, organizationID, jobID, data }: 
             }
         }
         try {
+
             const updatedJob = await prisma.jobPost.update({
                 where: { id: jobID },
                 data: {
@@ -436,16 +535,6 @@ export const updateJobDescription = async ({ userID, jobID, description, organiz
             where: {
                 id: organizationID
             },
-            include: {
-                organizationRole: {
-                    where: {
-                        email: user.email
-                    },
-                    select: {
-                        role: true
-                    }
-                }
-            }
         })
         if (!getOrganizationDetails) {
             return {
@@ -454,7 +543,12 @@ export const updateJobDescription = async ({ userID, jobID, description, organiz
             }
         }
 
-        if (!getOrganizationDetails.organizationRole[0] || getOrganizationDetails.organizationRole[0].role !== "OWNER") {
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: getOrganizationDetails.id,
+            action: "UPDATE JOB"
+        })
+        if (!roleGuard) {
             return {
                 type: "ERROR",
                 message: "You are restricted for this action!"
@@ -522,6 +616,18 @@ export const updateJobStages = async ({ userID, jobID, jobStages }: { userID: st
                 message: "Invalid update request made!"
             }
         }
+
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: jobData.organizationId,
+            action: "UPDATE JOB"
+        })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "You are restricted for this action!"
+            }
+        }
         const updatedJobStages = jobStages.map((x, index: number) => ({
             id: x.id, // Assuming each `jobStage` has an `id`
             displayOrder: index + 1
@@ -578,6 +684,19 @@ export const updateJobApplication = async ({ userID, jobID, jobApplication }: { 
                 message: "Invalid update request made!"
             }
         }
+
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: jobData.id,
+            action: "UPDATE JOB"
+        })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "You are restricted for this action!"
+            }
+        }
+
         const updatedJobApplication = jobApplication.map((x, index: number) => ({
             id: x.id, // Assuming each `jobStage` has an `id`
             rule: x.rule
@@ -634,7 +753,17 @@ export const addAdditionalQuestions = async ({ userID, jobID, jobApplication }: 
                 message: "Invalid update request made!"
             }
         }
-
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: jobData.organizationId,
+            action: "UPDATE JOB"
+        })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "You are restricted for this action!"
+            }
+        }
 
         try {
             const newAdditionalQuestion = await prisma.jobApplication.create({
@@ -688,7 +817,17 @@ export const updateAdditionalQuestions = async ({ userID, jobID, jobApplication 
                 message: "Invalid update request made!"
             }
         }
-
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: jobData.organizationId,
+            action: "UPDATE JOB"
+        })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "You are restricted for this action!"
+            }
+        }
 
         try {
             const updateJobAdditionalQuestions = await prisma.jobApplication.update({
@@ -743,7 +882,17 @@ export const updateDeleteStatusAdditionalQuestion = async ({ userID, jobID, ques
                 message: "Invalid update request made!"
             }
         }
-
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: jobData.organizationId,
+            action: "UPDATE JOB"
+        })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "You are restricted for this action!"
+            }
+        }
 
         try {
             const deleteAdditionalQuestions = await prisma.jobApplication.update({
@@ -1045,6 +1194,141 @@ export const deleteComment = async ({ userID, jobID, comment, candidateID, timel
         }
     }
 }
+
+export const addJobMailingTemplate = async ({ userID, jobID, templateName, templateSubject, templateBody }: { userID: string, jobID: string, templateName: string, templateSubject: string, templateBody: string }) => {
+
+    try {
+        const user = await currentUser();
+        if (!user?.id) {
+            redirect('/login')
+        }
+        if (user?.id !== userID) {
+            throw new Error("Invalid user request")
+        }
+
+        const jobData = await prisma.jobPost.findFirst({
+            where: {
+                id: jobID
+            }
+        })
+        if (!jobData) {
+            return {
+                type: "ERROR",
+                message: "Invalid update request made!"
+            }
+        }
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: jobData.organizationId,
+            action: "UPDATE JOB"
+        })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "You are restricted for this action!"
+            }
+        }
+
+        try {
+            const addTemplate = await prisma.jobMailingTemplate.create({
+                data: {
+                    jobId: jobID,
+                    name: templateName,
+                    subject: templateSubject,
+                    body: templateBody
+                }
+            });
+            revalidatePath(`/jobs/${jobID}/setting/mailing-templates`)
+            return {
+                type: "SUCCESS",
+                message: "Description Updated!",
+                data: addTemplate
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                type: "ERROR",
+                message: "Something went wrong!"
+            }
+        }
+    } catch (err) {
+        console.log(err)
+        return {
+            type: "ERROR",
+            message: "Something went wrong!"
+        }
+    }
+}
+
+export const updateJobMailingTemplate = async ({ userID, jobID, templateId, templateName, templateSubject, templateBody }: { userID: string, jobID: string, templateId: string, templateName: string, templateSubject: string, templateBody: string }) => {
+
+    try {
+        const user = await currentUser();
+        if (!user?.id) {
+            redirect('/login')
+        }
+        if (user?.id !== userID) {
+            throw new Error("Invalid user request")
+        }
+
+        const jobData = await prisma.jobPost.findFirst({
+            where: {
+                id: jobID
+            }
+        })
+        if (!jobData) {
+            return {
+                type: "ERROR",
+                message: "Invalid update request made!"
+            }
+        }
+        const roleGuard = await organizationRoleGuard({
+            email: user.email,
+            organizationId: jobData.organizationId,
+            action: "UPDATE JOB"
+        })
+        if (!roleGuard) {
+            return {
+                type: "ERROR",
+                message: "You are restricted for this action!"
+            }
+        }
+
+        try {
+            const addTemplate = await prisma.jobMailingTemplate.update({
+                where: {
+                    id: templateId
+                },
+                data: {
+                    jobId: jobID,
+                    name: templateName,
+                    subject: templateSubject,
+                    body: templateBody
+                }
+            });
+            revalidatePath(`/jobs/${jobID}/setting/mailing-templates`)
+            return {
+                type: "SUCCESS",
+                message: "Description Updated!",
+                data: addTemplate
+            }
+        } catch (err) {
+            console.log(err)
+            return {
+                type: "ERROR",
+                message: "Something went wrong!"
+            }
+        }
+    } catch (err) {
+        console.log(err)
+        return {
+            type: "ERROR",
+            message: "Something went wrong!"
+        }
+    }
+}
+
+
 export const getOrganization = async ({ userID }: { userID: string }) => {
     const user = await currentUser();
     if (!user?.id) {

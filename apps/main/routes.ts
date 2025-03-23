@@ -10,6 +10,21 @@ export const publicRoutes = [
   // 'api/organization/invite'
 ];
 
+
+/**
+ * An array of routes that are accessible to the admin
+ * These routes are role guard which are only accessible to admin or owner of the organization
+ * @type {string[]}
+ */
+export const adminRoutes = [
+  "/organization/setting",
+  '/organization/billing',
+  '/organization/domain'
+  // '/api/paddle/webhook',
+  // 'api/organization/invite'
+];
+
+
 /**
  * An array of routes that are used for authentication
  * These routes will redirect logged in users to /settings

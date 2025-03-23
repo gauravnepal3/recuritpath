@@ -69,7 +69,6 @@ const fieldStatus = [
 
 export default function ApplicationFrom({ userID, jobID, jobApplicationFormData }: { jobApplicationFormData: JobApplication[], userID: string, jobID: string }) {
     const additionalQuestion = jobApplicationFormData.filter(x => x.questionType == "Additional")
-    console.log(jobApplicationFormData)
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {

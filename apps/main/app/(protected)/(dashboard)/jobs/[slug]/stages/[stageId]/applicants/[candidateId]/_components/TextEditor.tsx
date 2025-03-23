@@ -91,7 +91,7 @@ const TextEditor = ({ jobID, userID, candidateID, setOpen }: { userID: string, j
                     </div>
 
                     {/* Fixed Verdict and Submit Section */}
-                    <div className="bottom-0 left-0 right-0 pr-4 bg-white">
+                    <div className="bottom-0 left-0 right-0 pr-4 pt-2">
                         <FormField
                             control={form.control}
                             name="position"

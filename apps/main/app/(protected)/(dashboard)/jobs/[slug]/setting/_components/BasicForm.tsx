@@ -28,6 +28,7 @@ import {
     FormMessage,
 } from "@repo/ui/components/form"
 
+import { format } from 'date-fns'
 import {
     Input
 } from "@repo/ui/components/input"
@@ -39,22 +40,15 @@ import {
     SelectValue
 } from "@repo/ui/components/select"
 import LocationSelector from "@repo/ui/components/location-input"
-import { Popover, PopoverContent, PopoverTrigger } from "@repo/ui/components/popover"
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from "@repo/ui/components/command"
-import { ChevronsUpDown, Check, CarTaxiFront } from "lucide-react"
+
+import { ChevronsUpDown, Check, CarTaxiFront, CalendarIcon } from "lucide-react"
 import countries from '@repo/ui/data/countries.json'
 import { MultiSelect } from "@repo/ui/components/multi-select"
 import { Cat, Dog, Fish, Rabbit, Turtle } from "lucide-react";
 import ChildForm from "./ChildForm"
 import { JobPost } from "@prisma/client"
 import { updateJobDetails } from "@/actions/jobs"
+import { Calendar } from "@repo/ui/components/calendar"
 const formSchema = z.object({
     title: z.string({ required_error: "Title is required" }).min(1, { message: "Title is required" }),
     category: z.string().optional(),
@@ -62,6 +56,7 @@ const formSchema = z.object({
     country: z.tuple([z.string(), z.string().optional()]).optional(),
     city: z.string().optional(),
     remoteOption: z.string().optional(),
+
     countryResidence: z.string().optional(),
     countryListResidence: z.string().array().optional(),
     displaySalary: z.string().optional(),
@@ -207,7 +202,6 @@ export default function MyForm({ jobDetails, userID, jobID }: { jobDetails: JobP
     })
     function onSubmit(values: z.infer<typeof formSchema>) {
         try {
-            console.log(values)
             const promise = updateJobDetails({ userID: userID, jobID: jobID, data: values, organizationID: jobDetails.organizationId })
             toast.promise(
                 promise.then((response) => {

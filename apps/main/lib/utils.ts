@@ -6,8 +6,22 @@ import { prisma } from "@repo/database"
 
 const roleGuard = [
   {
-    action: "ADD MEMBER", role: ['OWNER', 'ADMIN']
-  }
+    action: "ADD MEMBER", role: ['OWNER', 'ADMIN'],
+  },
+  {
+    action: "CREATE JOB", role: ['OWNER', 'ADMIN'],
+  },
+  {
+    action: "UPDATE JOB", role: ['OWNER', 'ADMIN'],
+  },
+  {
+    action: "PUBLISH JOB", role: ['OWNER', 'ADMIN'],
+  },
+  {
+    action: "GENERATE PREVIEW LINK", role: ['OWNER', 'ADMIN', 'INTERVIEWER']
+  },
+  { action: "ADD DOMAIN", role: ['OWNER'] },
+  { action: "REMOVE DOMAIN", role: ['OWNER'] },
 ]
 
 export function cn(...inputs: ClassValue[]) {
@@ -62,7 +76,7 @@ export async function organizationRoleGuard({ email, organizationId, action }: {
   if (!currentAction) {
     return false
   }
-  if (currentAction.role.includes(userRole?.role ?? 'VIEWER')) {
+  if (currentAction.role.includes(userRole?.role ?? 'INTERVIEWER')) {
     return true
   }
   return false

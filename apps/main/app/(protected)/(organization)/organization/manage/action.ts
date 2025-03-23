@@ -26,8 +26,10 @@ export const createOrganization = async (userID: string, organizationName: strin
             redirect('/login')
         }
 
+        const subdomain = organizationName.toLowerCase().replace(/\s+/g, '-');
         const rawData = {
-            name: organizationName
+            name: organizationName,
+            assignedDomain: subdomain
         }
         const createNewOrganization = await prisma.organization.create({
             data: rawData
@@ -73,7 +75,8 @@ export const getOrganization = async ({ userID }: { userID: string }) => {
         where: {
             organizationRole: {
                 some: {
-                    email: user.email
+                    email: user.email,
+                    status: 'ACTIVE'
                 }
             }
         },
