@@ -1,6 +1,7 @@
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 
 const s3Client = new S3Client({
     region: process.env.AWS_REGION!,
@@ -10,16 +11,14 @@ const s3Client = new S3Client({
     },
 });
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== "GET") {
-        return res.status(405).json({ message: "Method not allowed" });
-    }
+export async function GET(req: NextRequest) {
 
-    const bucketName = Array.isArray(req.query.bucketName) ? req.query.bucketName[0] : req.query.bucketName;
-    const fileKey = Array.isArray(req.query.fileKey) ? req.query.fileKey[0] : req.query.fileKey;
+
+    const bucketName = req.nextUrl.searchParams.get("bucketName");
+    const fileKey = req.nextUrl.searchParams.get("fileKey");
 
     if (!bucketName || !fileKey) {
-        return res.status(400).json({ message: "Missing bucketName or fileKey" });
+        return NextResponse.json({ message: "Missing bucketName or fileKey" }, { status: 400 });
     }
 
     try {
@@ -30,9 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // Expires in 1 hour
 
-        res.status(200).json({ url });
+        NextResponse.json({ url }, { status: 200 });
     } catch (error) {
         console.error("Error generating pre-signed URL:", error);
-        res.status(500).json({ message: "Failed to generate pre-signed URL" });
+        NextResponse.json({ error: "Failed to generate pre-signed URL" }, { status: 500 });
     }
 }

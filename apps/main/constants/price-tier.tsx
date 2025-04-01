@@ -2,7 +2,7 @@ export interface Tier {
     name: string;
     id: 'free' | 'pro' | 'premium';
     description: string;
-    features: string[];
+    feature: any
     featured: boolean;
     priceId: Record<string, string>;
 }
@@ -12,15 +12,130 @@ export const PricingTier: Tier[] = [
         name: 'Free',
         id: 'free',
         description: 'Ideal for individuals who want to get started with recruitment.',
-        features: ['1 Active Job', '5 Candidates per job', 'Limited messaging with candidates'],
+        feature: [
+            {
+                name: 'Usage',
+                feature: [
+                    {
+                        name: 'Team Members',
+                        value: '1',
+                        flag: true,
+                    },
+                    {
+                        name: 'Active Jobs',
+                        value: '1',
+                        flag: true,
+                    },
+                    {
+                        name: 'Candidates per job',
+                        value: '5',
+                        flag: true,
+                    }
+                ],
+            },
+            {
+                name: 'Features',
+                feature: [
+                    {
+                        name: 'Reporting',
+                        value: null,
+                        flag: true,
+                    },
+                    {
+                        name: 'Analytics',
+                        value: null,
+                        flag: false,
+                    },
+                    {
+                        name: 'Import and Export',
+                        value: null,
+                        flag: false,
+                    },
+                    {
+                        name: 'Integrations',
+                        value: null,
+                        flag: false,
+                    }
+                ]
+            },
+            {
+                name: 'Support', feature: [
+                    {
+
+                        name: 'Priority Support',
+                        value: null,
+                        flag: false
+                    }
+
+                ]
+            }
+        ],
         featured: false,
         priceId: { month: 'pri_01jm6ytkrvtj49qnhyhmngaqeh' },
     },
     {
         name: 'Pro',
         id: 'pro',
+        feature: [
+            {
+                name: 'Usage',
+                feature: [
+                    {
+                        name: 'Team Members',
+                        value: '3',
+                        flag: true,
+                    },
+                    {
+                        name: 'Active Jobs',
+                        value: '5',
+                        flag: true,
+                    },
+                    {
+                        name: 'Candidates per job',
+                        value: '50',
+                        flag: true,
+                    }
+                ],
+            },
+            {
+                name: 'Features',
+                feature: [
+                    {
+                        name: 'Reporting',
+                        value: null,
+                        flag: true,
+                    },
+                    {
+                        name: 'Analytics',
+                        value: null,
+                        flag: false,
+                    },
+                    {
+                        name: 'Import and Export',
+                        value: null,
+                        flag: true,
+                    },
+                    {
+                        name: 'Integrations',
+                        value: null,
+                        flag: false,
+                    }
+                ]
+            },
+            {
+                name: 'Support', feature: [
+                    {
+
+                        name: 'Priority Support',
+                        value: null,
+                        flag: true
+                    }
+
+                ]
+            }
+        ],
+
         description: 'Perfect for small teams looking to grow their recruitment efforts.',
-        features: ['5 Active Jobs', '50 Candidates per job', 'AI-Powered Resume Screening', 'Automated Email Responses to Candidates', 'Custom Branding', 'Interview Scheduling Tool', 'Team Collaboration'],
         featured: true,
         priceId: { month: 'pri_01jm4gjc1gvqkttcb1axf86617' },
     },
@@ -28,14 +143,63 @@ export const PricingTier: Tier[] = [
         name: 'Premium',
         id: 'premium',
         description: 'For large teams looking to scale their recruitment efforts.',
-        features: [
-            '10 Active Jobs',
-            '200 Candidates per job',
-            'All Pro Plan Features',
-            'LinkedIn Job Posting',
-            'AI Resume Screening & Candidate Scoring',
-            'Advanced Analytics & Reports',
-            'Unlimited Team Collaboration'
+        feature: [
+            {
+                name: 'Usage',
+                feature: [
+                    {
+                        name: 'Team Members',
+                        value: '10',
+                        flag: true,
+                    },
+                    {
+                        name: 'Active Jobs',
+                        value: 'Unlimited',
+                        flag: true,
+                    },
+                    {
+                        name: 'Candidates per job',
+                        value: '200',
+                        flag: true,
+                    }
+                ],
+            },
+            {
+                name: 'Features',
+                feature: [
+                    {
+                        name: 'Reporting',
+                        value: null,
+                        flag: true,
+                    },
+                    {
+                        name: 'Analytics',
+                        value: null,
+                        flag: true,
+                    },
+                    {
+                        name: 'Import and Export',
+                        value: null,
+                        flag: true,
+                    },
+                    {
+                        name: 'Integrations',
+                        value: null,
+                        flag: true,
+                    }
+                ]
+            },
+            {
+                name: 'Support', feature: [
+                    {
+
+                        name: 'Priority Support',
+                        value: null,
+                        flag: true
+                    }
+
+                ]
+            }
         ],
         featured: false,
         priceId: { month: 'pri_01jm4gm28cyxwhtdajtnv2wz5x' },

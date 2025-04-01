@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import * as jose from 'jose'
+import { addNotification } from "@/actions/notification";
 const SECRET_KEY = process.env.AUTH_SECRET || "your_secret_key"; // Use environment variable
 
 export async function GET(req: NextRequest) {
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Update the invitation status
-        await prisma.organizationUserRole.update({
+        const userRole = await prisma.organizationUserRole.update({
             where: { id: dbInviteId },
             data: {
                 status: "ACTIVE",
@@ -60,6 +61,15 @@ export async function GET(req: NextRequest) {
             },
         });
 
+        const notification = await addNotification({
+            message: `${userDetails.name} has joined the organization.`,
+            category: "INVITATION",
+            type: "ORGANIZATION",
+            organizationID: userRole.organizationId,
+            notificationPermission: "ALL",
+            priority: "HIGH",
+            actionUrl: "/organization/setting",
+        })
         // Redirect to success page
         return NextResponse.redirect(new URL("/invite-status?status=success&message=" + encodeURIComponent("Invitation accepted successfully"), req.url));
     } catch (error) {

@@ -1,5 +1,5 @@
 'use client';
-
+import { useTheme } from 'next-themes'
 import { PriceSection } from './price-section';
 import { Environments, initializePaddle, Paddle } from '@paddle/paddle-js';
 import { useEffect, useState } from 'react';
@@ -33,7 +33,7 @@ export function CheckoutContents({ organizationSubscription, userEmail, organiza
     const [quantity, setQuantity] = useState<number>(1);
     const [paddle, setPaddle] = useState<Paddle | null>(null);
     const [checkoutData, setCheckoutData] = useState<CheckoutEventsData | null>(null);
-
+    const { theme } = useTheme()
     const handleCheckoutEvents = (event: CheckoutEventsData) => {
         setCheckoutData(event);
     };
@@ -50,9 +50,9 @@ export function CheckoutContents({ organizationSubscription, userEmail, organiza
                 },
                 checkout: {
                     settings: {
-                        variant: 'one-page',
+                        variant: 'multi-page',
                         displayMode: 'inline',
-                        theme: 'light',
+                        theme: theme === 'dark' ? 'dark' : 'light',
                         allowLogout: !userEmail,
                         frameTarget: 'paddle-checkout-frame',
                         frameInitialHeight: 450,
@@ -87,7 +87,7 @@ export function CheckoutContents({ organizationSubscription, userEmail, organiza
     return (
         <div
             className={
-                'rounded-lg md:bg-background/80 md:backdrop-blur-[24px] md:p-10 md:pl-16 md:pt-4 md:min-h-[400px] flex flex-col justify-between relative'
+                'light md:backdrop-blur-[24px] md:p-10 md:pl-16 md:pt-4 md:min-h-[400px] flex flex-col justify-between relative'
             }
         >
             <div className={'flex flex-col md:flex-row gap-8 md:gap-16'}>

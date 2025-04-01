@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation';
 import React from 'react'
 import { prisma } from '@repo/database'
 import { cookies } from 'next/headers';
+import { Button } from '@repo/ui/components/button';
+import Link from 'next/link';
 const getOrganizationSubscription = async (organizationId: string, userId: string) => {
     return await prisma.organizationSubscription.findFirst({
         where: {
@@ -29,11 +31,16 @@ const Account = async () => {
             <div className="text-xl font-bold">
                 Billing
             </div>
-            <div className="">
+            <div className="mt-5">
                 Current Plan
             </div>
-            <div className="">
-                {organizationSubscription?.subscriptionType ?? 'Free'}
+            <div className="flex gap-x-3 items-baseline">
+                <Badge className='mt-2'>
+                    {organizationSubscription?.subscriptionType ?? 'Free'}
+                </Badge>
+                <Link href={'/pricing'} className="text-xs">
+                    Upgrade
+                </Link>
             </div>
         </div>
     )

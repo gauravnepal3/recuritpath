@@ -1,12 +1,8 @@
 import { PricingTier } from '@/constants/price-tier';
 import { IBillingFrequency } from '@/constants/billing-frequency';
-import { FeaturesList } from '@/components/pricing/features-list';
 import { PriceAmount } from '@/components/pricing/price-amount';
-import { cn } from '@repo/ui/lib/utils';
 import { Button } from '@repo/ui/components/button';
-import { PriceTitle } from '@/components/pricing/price-title';
-import { Separator } from '@repo/ui/components/separator';
-import { FeaturedCardGradient } from './featured-card-gradient';
+import React from 'react';
 import Link from 'next/link';
 
 interface Props {
@@ -17,28 +13,52 @@ interface Props {
 
 export function PriceCards({ loading, frequency, priceMap }: Props) {
     return (
-        <div className="isolate mx-auto grid grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-            {PricingTier.map((tier) => (
-                <div key={tier.id} className={cn(`rounded-lg bg-background/70 backdrop-blur-[6px] overflow-hidden`, {
-                    "animate-background-shine dark:bg-[linear-gradient(110deg,#000103,45%,#1e2631,55%,#000103)] bg-[length:200%_100%] overflow-hidden transition-colors": tier.featured,
-                })}>
-                    <div className={cn('flex gap-5 flex-col rounded-lg rounded-b-none pricing-card-border')}>
-                        {/* {tier.featured && <FeaturedCardGradient />} */}
-                        <PriceTitle tier={tier} />
+        <div className="overflow-x-auto">
+            <table className="min-w-full">
+                <thead>
+                    <tr className="w-full">
+                        <th className=" px-4"></th>
+                        {PricingTier.map((tier) => (
+                            <th key={tier.id} className=" px-4 py-2 text-center">
+                                <h2 className="text-3xl font-semibold">{tier.name}</h2>
+                                <PriceAmount
+                                    loading={loading}
+                                    tier={tier}
+                                    priceMap={priceMap}
+                                    value={frequency.value}
+                                    priceSuffix={frequency.priceSuffix}
+                                />
+                                <Link href={`/checkout/${tier.priceId.month}`} className="mt-2">
+                                    Get started
+                                </Link>
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {PricingTier[0]?.feature?.map((category: any, categoryIndex: number) => (
+                        <React.Fragment key={categoryIndex}>
+                            <tr className="border-b">
+                                <td colSpan={PricingTier.length + 1} className="px-4 py-5 text-3xl font-bold">{category.name}</td>
+                            </tr>
+                            {category.feature.map((feature: any, featureIndex: number) => (
+                                <tr key={`${categoryIndex}-${featureIndex}`}>
+                                    <td className=" px-4 py-5">{feature.name}</td>
+                                    {PricingTier.map((tier) => {
+                                        const tierFeature = tier.feature.find((cat: any) => cat.name === category.name)?.feature.find((f: any) => f.name === feature.name);
+                                        return (
+                                            <td key={tier.id} className="border-primary border-dashed border-y  px-4 py-2 text-center">
+                                                {tierFeature?.flag ? (tierFeature.value ? tierFeature.value : "✔") : "-"}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            ))}
+                        </React.Fragment>
+                    ))}
 
-                        <div className={'px-8'}>
-                            <Separator className={'bg-border'} />
-                        </div>
-                        <div className={'px-8 text-[16px] leading-[24px]'}>{tier.description}</div>
-                    </div>
-                    <div className={'px-8 mt-8'}>
-                        <Button className={'w-full'} variant={'default'} asChild={true}>
-                            <Link href={`/checkout/${tier.priceId[frequency.value]}`}>Get started</Link>
-                        </Button>
-                    </div>
-                    <FeaturesList tier={tier} />
-                </div>
-            ))}
+                </tbody>
+            </table>
         </div>
     );
 }

@@ -1,5 +1,5 @@
 'use client'
-import { Copy } from "lucide-react"
+import { Copy, Plus } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -31,22 +31,7 @@ import { toast } from "sonner"
 import React from "react"
 import { addComment, addJobMailingTemplate, updateJobMailingTemplate } from "@/actions/jobs"
 
-type TemplateType = {
-    isCustom: boolean;
-    isDefaultEdited: boolean;
-    id: string;
-    name: string;
-    subject: string;
-    body: string;
-    createdAt: Date;
-    jobId: string;
-} | {
-    isCustom: boolean;
-    isDefaultEdited: boolean;
-    name: string;
-    subject: string;
-    body: string;
-}
+
 const FormSchema = z.object({
     subject: z.string(),
     name: z.string(),
@@ -60,34 +45,20 @@ const FormSchema = z.object({
         }),
 })
 
-export function EditTemplateDialog({ userID, jobID, template }: { userID: string, template: TemplateType, jobID: string }) {
+export function AddTemplateDialog({ userID, jobID }: { userID: string, jobID: string }) {
     const dynamicValue = ['CandidateName', 'CompanyName', 'JobTitle', 'JobCategory']
-    const [updatedBody, setUpdatedBody] = React.useState("");
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
-            name: template.name,
-            body: template.body ?? '',
-            subject: template.subject
+            name: '',
+            body: '',
+            subject: ''
         }
     })
-    const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
-    React.useEffect(() => {
-        if (updatedBody) {
-            form.setValue("body", updatedBody);
-        }
-    }, [updatedBody, form]);
-
     const [open, setOpen] = React.useState<boolean>(false);
     function onSubmit(data: z.infer<typeof FormSchema>) {
         try {
-            const promise = (template.isDefaultEdited || template.isCustom) ?
-                updateJobMailingTemplate(
-                    {
-                        userID: userID, templateName: data.name, templateSubject: data.subject, templateBody: data.body, jobID: jobID, templateId: 'id' in template ? template.id : ''
-                    }
-                )
-                : addJobMailingTemplate({ userID: userID, templateName: data.name, templateSubject: data.subject, templateBody: data.body, jobID: jobID })
+            const promise = addJobMailingTemplate({ userID: userID, templateName: data.name, templateSubject: data.subject, templateBody: data.body, jobID: jobID })
             toast.promise(
                 promise.then((response) => {
                     // Check the custom response type
@@ -114,20 +85,20 @@ export function EditTemplateDialog({ userID, jobID, template }: { userID: string
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant={'link'} className='text-xs font-normal'>
-                    Edit
+                <Button variant={'default'} className='text-xs font-normal'>
+                    <Plus />
+                    Add
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Edit Template</DialogTitle>
+                    <DialogTitle>Add Template</DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
                             control={form.control}
                             name="name"
-                            disabled={!template.isCustom}
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Name</FormLabel>
@@ -141,7 +112,6 @@ export function EditTemplateDialog({ userID, jobID, template }: { userID: string
                         <FormField
                             control={form.control}
                             name="subject"
-                            disabled={!template.isCustom}
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Subject</FormLabel>
@@ -159,6 +129,7 @@ export function EditTemplateDialog({ userID, jobID, template }: { userID: string
                             control={form.control}
                             name="body"
                             render={({ field }) => {
+                                const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
                                 return (
                                     <FormItem className="space-y-1 mt-3">
                                         <FormLabel>Body</FormLabel>
@@ -167,14 +138,21 @@ export function EditTemplateDialog({ userID, jobID, template }: { userID: string
                                                 <Textarea
                                                     placeholder="Share a little bit about the candidate. You can use dynamic values like {{JobName}}."
                                                     className="resize-none min-h-[250px]"
-                                                    {...field} // Keep this to bind React Hook Form
+                                                    {...field}
                                                     ref={(el) => {
-                                                        field.ref(el); // Assign to RHF
-                                                        textareaRef.current = el; // Assign to custom ref
+                                                        textareaRef.current = el;
+                                                        field.ref(el);
+                                                    }}
+                                                    onSelect={() => {
+                                                        if (textareaRef.current) {
+                                                            const selectionStart = textareaRef.current?.selectionStart || 0;
+                                                            const selectionEnd = textareaRef.current?.selectionEnd || 0;
+                                                        }
                                                     }}
                                                 />
                                                 <div className="flex space-x-2">
                                                     {dynamicValue.map(x => (
+
                                                         <Button
                                                             key={x}
                                                             type="button"
@@ -185,7 +163,7 @@ export function EditTemplateDialog({ userID, jobID, template }: { userID: string
                                                                 const end = textareaRef.current?.selectionEnd || 0;
                                                                 const value = field.value;
                                                                 const newValue = `${value.slice(0, start)}{{${x}}}${value.slice(end)}`;
-                                                                setUpdatedBody(newValue); // Defer setting form value
+                                                                form.setValue("body", newValue);
                                                             }}
                                                         >
                                                             {`{{${x}}}`}
@@ -199,9 +177,8 @@ export function EditTemplateDialog({ userID, jobID, template }: { userID: string
                                 )
                             }}
                         />
-
                         <div className="mt-5">
-                            <Button className="w-full" type="submit">Submit</Button>
+                            <Button className="w-full" type="submit">Save Template</Button>
                         </div>
                     </form>
                 </Form>

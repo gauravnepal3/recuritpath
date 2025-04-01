@@ -24,7 +24,8 @@ export default async function RootLayout({
     <SessionProvider session={session}>
       <html lang="en" suppressHydrationWarning>
         <body className={inter.className}>
-          <Providers>
+          <Providers
+          >
           <Toaster
             toastOptions={{
               unstyled: false,

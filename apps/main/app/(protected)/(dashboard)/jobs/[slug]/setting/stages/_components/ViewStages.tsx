@@ -59,10 +59,14 @@ const ViewStages = ({ jobStages, userID, jobID }: { jobStages: JobStage[], userI
                 const updatedItems = [...prevItems];
                 const draggingIndex = updatedItems.findIndex((item) => item.id === draggingItem.id);
                 const targetIndex = updatedItems.findIndex((item) => item.id === targetItem.id);
-                [updatedItems[draggingIndex], updatedItems[targetIndex]] = [
-                    updatedItems[targetIndex],
-                    updatedItems[draggingIndex],
-                ];
+                if (draggingIndex !== -1 && targetIndex !== -1) {
+                    if (updatedItems[draggingIndex] && updatedItems[targetIndex]) {
+                        [updatedItems[draggingIndex], updatedItems[targetIndex]] = [
+                            updatedItems[targetIndex],
+                            updatedItems[draggingIndex],
+                        ];
+                    }
+                }
                 return updatedItems;
             });
             setChangeDataFlag(true)

@@ -925,7 +925,7 @@ export const updateDeleteStatusAdditionalQuestion = async ({ userID, jobID, ques
     }
 }
 
-export const moveToStage = async ({ userID, candidateID, stageID }: { userID: string, candidateID: string, stageID: string }) => {
+export const moveToStage = async ({ userID, candidateID, stageID, confirmation }: { userID: string, candidateID: string, stageID: string, confirmation?: boolean }) => {
     try {
         const user = await currentUser();
         if (!user?.id) {

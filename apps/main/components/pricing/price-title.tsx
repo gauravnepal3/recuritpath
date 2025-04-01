@@ -1,5 +1,4 @@
 import { Tier } from '@/constants/price-tier';
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Badge } from '@repo/ui/components/badge';
 

@@ -81,9 +81,6 @@ const JobLayout = async ({ children, params }: ProtectedLayoutProps) => {
                         </div>
                         <GeneratePreviewJob jobID={jobDetails.id} organizationID={organization.value} />
                     </div>
-                    <div className="ml-auto mr-3">
-                        <Bell className='size-4'></Bell>
-                    </div>
                 </div>
             </div>
 

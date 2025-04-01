@@ -3,6 +3,7 @@ import React from 'react'
 import '@/styles/pricing.css';
 const PricingPage = () => {
     return (
+
         <Pricing />
     )
 }

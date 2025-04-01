@@ -19,6 +19,7 @@ import { prisma } from '@repo/database'
 import { currentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getOrganizationTier } from "@/lib/subscription";
+import { ScrollArea } from "@repo/ui/components/scroll-area";
 interface ProtectedLayoutProps {
   children: React.ReactNode;
 };
@@ -65,9 +66,11 @@ const ProtectedLayout = async ({ children }: ProtectedLayoutProps) => {
       >
         <AppSidebar user={user} organizationTier={organizationTier} organizationDetails={organizationDetails} />
         <SidebarInset>
-          <div className="flex flex-1 flex-col gap-4">
+          <ScrollArea className='h-[calc(100vh)]'>
+
             {children}
-          </div>
+
+          </ScrollArea>
         </SidebarInset>
       </SidebarProvider>
     </div>

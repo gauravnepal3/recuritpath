@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { LocalizationBanner } from './localization-banner';
 import { PricingComponent } from './PricingComponent';
 
 export function Pricing() {
@@ -10,7 +9,7 @@ export function Pricing() {
     return (
         <>
             {/* <LocalizationBanner country={country} onCountryChange={setCountry} /> */}
-            <div className='min-h-screen w-full grid place-items-center'>
+            <div className='w-full p-5'>
                 <PricingComponent country={country} />
             </div>
         </>

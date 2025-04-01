@@ -1,23 +1,22 @@
 "use server";
 
 import * as z from "zod";
-import { AuthError } from "next-auth";
 
 import { db } from "@/lib/db";
 import { signIn } from "@/auth";
 import { LoginSchema } from "@/schemas";
 import { getUserByEmail } from "@/data/user";
 import { getTwoFactorTokenByEmail } from "@/data/two-factor-token";
-import { 
+import {
   sendVerificationEmail,
   sendTwoFactorTokenEmail,
 } from "@/lib/mail";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
-import { 
+import {
   generateVerificationToken,
   generateTwoFactorToken
 } from "@/lib/tokens";
-import { 
+import {
   getTwoFactorConfirmationByUserId
 } from "@/data/two-factor-confirmation";
 
@@ -109,15 +108,6 @@ export const login = async (
       redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     })
   } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return { error: "Invalid credentials!" }
-        default:
-          return { error: "Something went wrong!" }
-      }
-    }
-
     throw error;
   }
 };

@@ -1,9 +1,12 @@
 "use server";
+import { MailingTemplate } from '@/constant/mailing-template'
 
 import { generatePresignedUrl } from "./getPresignedURL";
 import { validateRecaptcha } from "./reCaptcha";
 
 import { prisma } from "@repo/database"
+import { sendEmail } from '@/lib/mail';
+import path from 'path';
 
 interface SuccessResponse<T = any> {
     type: "SUCCESS";
@@ -56,7 +59,8 @@ export const submitForm = async (formData: FormData): Promise<SuccessResponse<Ca
                 id: jobID as string
             },
             include: {
-                jobStage: true
+                jobStage: true,
+                organization: true
             }
         })
 
@@ -72,7 +76,7 @@ export const submitForm = async (formData: FormData): Promise<SuccessResponse<Ca
         const formValues = Object.fromEntries(formData.entries());
 
         const mappedData = await Promise.all(
-            formMetaData.map(async (field) => {
+            formMetaData.map(async (field: any) => {
                 const value = formValues[field.id] ?? null; // Ensure we never get `undefined`
 
                 // Validation
@@ -114,8 +118,17 @@ export const submitForm = async (formData: FormData): Promise<SuccessResponse<Ca
         if (!inboxStage) {
             return { type: "ERROR", message: "Inbox stage not found" };
         }
+        let mailTemplate;
+        mailTemplate = await prisma.jobMailingTemplate.findFirst({
+            where: {
+                jobId: jobData.id,
+                name: "Application Received"
+            }
+        })
 
-
+        if (!mailTemplate) {
+            mailTemplate = MailingTemplate.find(x => x.name === "Application Received")
+        }
         // Step 4: Save candidate application
         const candidateApplication = await prisma.candidateApplication.create({
             data: {
@@ -138,6 +151,35 @@ export const submitForm = async (formData: FormData): Promise<SuccessResponse<Ca
             },
             include: { formResponses: true, CandidateTimeline: true },
         });
+
+        const replacements = {
+            "Candidate Name": candidateApplication.formResponses.find(x => x.label === "Name")?.value,
+            "Job Title": jobData.title,
+            "Organization Name": jobData.organization.name,
+            "Company Name": jobData.organization.name,  // If you need it as a separate placeholder
+        };
+        if (mailTemplate) {
+            const parsedBody = replacePlaceholdersInBody(mailTemplate.body, replacements);
+            const mail = await sendEmail(
+                {
+                    to: [validMappedData.find(x => x.label === "Email")?.value ?? ''],
+                    from: 'career@requro.com',
+                    subject: mailTemplate?.subject ?? 'Application Received',
+                    body: mailTemplate?.body ?? '',
+                    htmlTemplate: {
+                        filePath: path.join(process.cwd(), "mailTemplates", "thankyou.hbs"),
+                        context: {
+                            companyLogo: `${process.env.S3_PUBLIC_URL}/${jobData.organization.logo}`,
+                            candidateName: candidateApplication.formResponses.find(x => x.label === "Name")?.value,
+                            jobTitle: jobData.title,
+                            message: parsedBody,
+                            companyName: jobData.organization.name,
+                            candidateId: candidateApplication.id,
+                        }
+                    }
+                }
+            )
+        }
         return { type: "SUCCESS", message: "Form submitted successfully", data: candidateApplication };
     } catch (err) {
         console.error("Form submission error:", err);
@@ -154,3 +196,11 @@ function validateField(value: string | File, rule: string, dataType: string): bo
     return true;
 }
 
+
+const replacePlaceholdersInBody = (bodyTemplate: string, replacements: Record<string, string | null | undefined>) => {
+    return bodyTemplate.replace(/{{(.*?)}}/g, (_, key) => {
+        // Trim any extra spaces and get the replacement value from the replacements object
+        const value = replacements[key.trim()];
+        return value || `{{${key}}}`; // If value is undefined or null, leave the placeholder
+    });
+};

@@ -49,6 +49,10 @@ model User {
   candidateTimeline        CandidateTimeline[]
   emailMessage             EmailMessage[]
   organizationSubscription OrganizationSubscription[]
+
+  NotificationReceipt NotificationReceipt[]
+
+  Notification Notification[]
 }
 
 model Account {
@@ -123,6 +127,8 @@ model Organization {
   jobPreview               JobPreview[]
   organizationSubscription OrganizationSubscription[]
   createdAt                DateTime                   @default(now())
+
+  Notification Notification[]
 }
 
 model OrganizationSubscription {
@@ -338,4 +344,38 @@ model EmailMessage {
   replies         EmailMessage[]       @relation("MessageThread")
 
   @@index([parentMessageId]) // Index for faster lookups
+}
+
+model Notification {
+  id             String    @id @default(cuid())
+  message        String
+  createdAt      DateTime  @default(now())
+  type           String    @default("PERSONAL") // PERSONAL | ORGANIZATION
+  category       String    @default("GENERAL") // JOB_UPDATE | PAYMENT | SYSTEM_ALERT | etc.
+  actionUrl      String?
+  priority       String    @default("NORMAL") // ALL |
+  metadata       Json?
+  // If the notification is for a specific user
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // If the notification is for an organization
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+
+  // Relationship for tracking read status
+  receipts       NotificationReceipt[]
+}
+
+model NotificationReceipt {
+  id             String   @id @default(cuid())
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  userId         String
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isRead         Boolean  @default(false)
+  readAt         DateTime?
 }

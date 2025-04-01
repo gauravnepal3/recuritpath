@@ -19,11 +19,6 @@ const layout = async ({ children, params }: ProtectedLayoutProps) => {
                     <AppSidebar
                     />
                     <SidebarInset>
-                        <div className="border-b py-2">
-                            <div className="ml-auto mr-3 my-auto grid place-items-center w-8 h-8">
-                                <Bell className='size-4' />
-                            </div>
-                        </div>
                         <ScrollArea className='h-[calc(100vh-4rem)]'>
                             {children}
                         </ScrollArea>
