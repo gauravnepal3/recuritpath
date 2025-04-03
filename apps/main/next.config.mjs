@@ -5,10 +5,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     output: 'standalone',
-    server: {
-        host: '0.0.0.0',
-        port: 3000
-    },
     transpilePackages: ["@repo/ui"],
     reactStrictMode: true,
     webpack: (config) => {

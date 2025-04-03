@@ -5,10 +5,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig = {
   output: 'standalone',
-  server: {
-    host: '0.0.0.0',
-    port: 3001
-  },
   experimental: {
     serverActions: {
       bodySizeLimit: '5mb',
