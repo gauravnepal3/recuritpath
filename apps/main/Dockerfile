@@ -49,7 +49,7 @@ ENV npm_config_python=/usr/bin/python3
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
-RUN pnpm install --unsafe-perm
+RUN pnpm install --frozen-lockfile --unsafe-perm
 
 COPY --from=builder /app/out/full/ .
 
