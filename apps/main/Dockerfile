@@ -74,5 +74,4 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/static ./apps/main/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/public ./apps/main/public
 
-ENTRYPOINT ["/app/entrypoint.sh"]
 CMD node apps/main/server.js
