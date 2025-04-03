@@ -22,7 +22,7 @@ async function verifyJWT(token: string): Promise<{ organizationId: string; userR
     return null;
   }
 }
-export default auth(async (req: any) => {
+export default auth(async (req: any): Promise<void | Response> => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
 
@@ -33,7 +33,7 @@ export default auth(async (req: any) => {
 
   // Skip middleware for API auth routes
   if (isApiAuthRoute) {
-    return null;
+    return;
   }
 
   // Redirect logged-in users away from auth pages (e.g., login/register)
@@ -41,7 +41,7 @@ export default auth(async (req: any) => {
     if (isLoggedIn) {
       return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl))
     }
-    return null;
+    return;
   }
 
   // Redirect guests to login page (if the route is not public)
@@ -68,7 +68,7 @@ export default auth(async (req: any) => {
     }
   }
 
-  return null; // Allow access if no conditions were met
+  return; // Allow access if no conditions were met
 });
 
 // Optionally, don't invoke Middleware on some paths

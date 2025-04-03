@@ -7,8 +7,8 @@ import type { toggleVariants } from '@repo/ui/components/toggle'
 import { cn } from '@repo/ui/lib/utils'
 import { CaretDownIcon, LetterCaseCapitalizeIcon } from '@radix-ui/react-icons'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@repo/ui/components/dropdown-menu'
-import { ToolbarButton } from '@repo/ui/components/minimal-tiptap/components/toolbar-button'
-import { ShortcutKey } from '@repo/ui/components/minimal-tiptap/components/shortcut-key'
+import { ToolbarButton } from '@repo/ui/components/minimal-tiptap/components/toolbar-button.tsx'
+import { ShortcutKey } from '@repo/ui/components/minimal-tiptap/components/shortcut-key.tsx'
 
 interface TextStyle extends Omit<FormatAction, 'value' | 'icon' | 'action' | 'isActive' | 'canExecute'> {
   element: keyof React.JSX.IntrinsicElements

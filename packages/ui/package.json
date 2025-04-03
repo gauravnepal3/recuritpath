@@ -75,6 +75,6 @@
     "./lib/*": "./src/lib/*.ts",
     "./components/*": "./src/components/*.tsx",
     "./components/minimal-tiptap/*": "./src/components/minimal-tiptap/*.ts",
-    "./hooks/*": "./src/hooks/*.ts"
+    "./hooks/*": "./src/hooks/*.tsx"
   }
 }

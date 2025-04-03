@@ -4,8 +4,8 @@ import type { VariantProps } from 'class-variance-authority'
 import type { toggleVariants } from '@repo/ui/components/toggle'
 import { Popover, PopoverContent, PopoverTrigger } from '@repo/ui/components/popover'
 import { Link2Icon } from '@radix-ui/react-icons'
-import { ToolbarButton } from '@repo/ui/components/minimal-tiptap/components/toolbar-button'
-import { LinkEditBlock } from '@repo/ui/components/minimal-tiptap/components/link/link-edit-block'
+import { ToolbarButton } from '@repo/ui/components/minimal-tiptap/components/toolbar-button.tsx'
+import { LinkEditBlock } from '@repo/ui/components/minimal-tiptap/components/link/link-edit-block.tsx'
 
 interface LinkEditPopoverProps extends VariantProps<typeof toggleVariants> {
   editor: Editor

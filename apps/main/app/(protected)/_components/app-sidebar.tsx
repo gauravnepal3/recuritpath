@@ -21,7 +21,12 @@ import {
 import { Switch } from "@repo/ui/components/switch"
 import Link from "next/link"
 import { currentUser } from "@/lib/auth"
-import { ExtendedUser } from "next-auth"
+// Define ExtendedUser type locally or import it from the correct module
+interface ExtendedUser {
+    name?: string;
+    email?: string;
+    image?: string;
+}
 import { UserRole } from "@repo/database"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@repo/ui/components/button"

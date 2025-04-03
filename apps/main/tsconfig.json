@@ -19,7 +19,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "../../packages/ui/src/hooks/use-mobile.tsx",
-    "../../packages/ui/src/hooks/use-toast.ts",
+    "../../packages/ui/src/hooks/use-toast.tsx",
     "../../packages/ui/src/components/avatar.tsx",
     "../../packages/ui/src/components/badge.tsx",
     "../../packages/ui/src/components/breadcrumb.tsx",
