@@ -32,18 +32,11 @@ services:
 
   # New migration service
   database-migrations:
-    container_name: database-migrations
     build:
-      context: .
+      context: .  # Point to monorepo root
       dockerfile: ./packages/database/Dockerfile
     environment:
       DATABASE_URL: ${DATABASE_URL}
-    networks:
-      - app_network
-    # Optional: uncomment if you want to run migrations manually
-    # command: ["pnpm", "exec", "prisma", "migrate", "deploy"]
-    # Uncomment for production to prevent automatic migrations
-    # restart: "no"
 
 networks:
   app_network:
