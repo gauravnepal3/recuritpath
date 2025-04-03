@@ -51,6 +51,8 @@ COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
 RUN pnpm install --unsafe-perm
 
+RUN pnpm prisma migrate deploy
+
 COPY --from=builder /app/out/full/ .
 RUN pnpm run generate
 RUN pnpm turbo build
