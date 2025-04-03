@@ -65,7 +65,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY ./apps/client/entrypoint.sh /app/entrypoint.sh
+COPY ./apps/main/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 USER nextjs
@@ -74,4 +74,4 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/static ./apps/main/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/public ./apps/main/public
 
-CMD node apps/main/server.js
+CMD pnpm prisma migrate deploy && node apps/main/server.js
