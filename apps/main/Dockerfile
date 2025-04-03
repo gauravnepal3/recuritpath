@@ -51,7 +51,6 @@ COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
 RUN pnpm install --unsafe-perm
 
-RUN pnpm run db:migrate:deploy
 COPY --from=builder /app/out/full/ .
 
 RUN pnpm run generate
