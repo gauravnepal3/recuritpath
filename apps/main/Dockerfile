@@ -74,6 +74,7 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/static ./apps/main/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/public ./apps/main/public
 
+EXPOSE 3001
 # Run entrypoint script
 CMD node apps/main/server.js
 
