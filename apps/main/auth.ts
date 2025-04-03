@@ -15,6 +15,8 @@ export const {
   signOut,
   unstable_update
 } = NextAuth({
+  trustHost: true,
+
   pages: {
     signIn: "/auth/login",
     error: "/auth/error",
@@ -27,6 +29,7 @@ export const {
       })
     }
   },
+
   callbacks: {
     async signIn({ user, account }) {
       // Allow OAuth without email verification
