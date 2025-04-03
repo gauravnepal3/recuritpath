@@ -1,38 +1,46 @@
-version: "3.8"
+version: "3"
+
+volumes:
+  database:
+    driver: local
 
 services:
-  # Your existing services
   main:
     container_name: main
     build:
       context: .
       dockerfile: ./apps/main/Dockerfile
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
+    restart: always
     ports:
       - 3000:3000
     networks:
       - app_network
+    depends_on:
+      - migration  # Ensures migrations run before the main service
 
   client:
     container_name: client
     build:
       context: .
       dockerfile: ./apps/client/Dockerfile
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
+    restart: always
     ports:
       - 3001:3001
     networks:
       - app_network
+    depends_on:
+      - migration  # Ensures migrations run before the client service
 
-  # New migration service
-  # database-migrations:
-  #   build:
-  #     context: .  # Point to monorepo root
-  #     dockerfile: ./packages/database/Dockerfile
-  #   environment:
-  #     DATABASE_URL: ${DATABASE_URL}
+  migration:
+    container_name: migration
+    build:
+      context: .
+      dockerfile: ./Dockerfile.migrate  # Points to the migration Dockerfile
+    environment:
+      - NODE_ENV=production  # Set this as needed
+    networks:
+      - app_network
+    command: ["pnpm", "run", "db:migrate:deploy"]  # This will run the Prisma migrations on container startup
 
 networks:
   app_network:

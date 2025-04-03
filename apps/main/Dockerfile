@@ -49,7 +49,7 @@ ENV npm_config_python=/usr/bin/python3
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
-RUN pnpm install --frozen-lockfile --unsafe-perm
+RUN pnpm install --unsafe-perm
 
 COPY --from=builder /app/out/full/ .
 
@@ -75,7 +75,6 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/static ./apps/m
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/public ./apps/main/public
 
 # Run entrypoint script
-ENTRYPOINT ["/app/entrypoint.sh"]
 CMD node apps/main/server.js
 
 
