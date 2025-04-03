@@ -77,6 +77,7 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/main/public ./apps/main/pu
 EXPOSE 3000
 ENV PORT=3000
 # Run entrypoint script
+ENV HOST="0.0.0.0"
 CMD node apps/main/server.js
 
 
