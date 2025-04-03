@@ -7,7 +7,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
 # 3. Copy only the minimal files needed first
-COPY pnpm-lock.yaml .npmrc package.json turbo.json ./
+COPY pnpm-lock.yaml package.json turbo.json ./
 
 # 4. Install dependencies at root level
 RUN pnpm install --frozen-lockfile
