@@ -61,12 +61,18 @@ RUN pnpm turbo build
 FROM base AS runner
 WORKDIR /app
 
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+COPY ./apps/client/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 USER nextjs
 
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/static ./apps/main/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/public ./apps/main/public
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD node apps/main/server.js
