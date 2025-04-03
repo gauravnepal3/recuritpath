@@ -7,8 +7,6 @@ services:
     build:
       context: .
       dockerfile: ./apps/main/Dockerfile
-    depends_on:
-      - database-migrations  # Wait for migrations to complete
     environment:
       DATABASE_URL: ${DATABASE_URL}
     ports:
@@ -21,8 +19,6 @@ services:
     build:
       context: .
       dockerfile: ./apps/client/Dockerfile
-    depends_on:
-      - database-migrations  # Wait for migrations to complete
     environment:
       DATABASE_URL: ${DATABASE_URL}
     ports:
