@@ -19,7 +19,7 @@ export default async function middleware(req: NextRequest) {
     // Get hostname of request (e.g. demo.vercel.pub, demo.localhost:3000)
     let hostname = req.headers
         .get("host")!
-        .replace(".localhost:3001", `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`);
+        .replace(".localhost:3001", `.${process.env.NEXT_PUBLIC_CLIENT_URL}`);
 
     const searchParams = req.nextUrl.searchParams.toString();
     // Get the pathname of the request (e.g. /, /about, /blog/first-post)
@@ -30,7 +30,7 @@ export default async function middleware(req: NextRequest) {
     // rewrite root application to `/home` folder
     if (
         hostname === "localhost:3001" ||
-        hostname === process.env.NEXT_PUBLIC_ROOT_DOMAIN
+        hostname === process.env.NEXT_PUBLIC_CLIENT_URL
     ) {
         return NextResponse.rewrite(
             new URL(`/home${path === "/" ? "" : path}`, req.url),

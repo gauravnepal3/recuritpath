@@ -10,7 +10,7 @@ const getDetailsByDomain = async (domain: string) => {
         where: {
             OR: [
                 {
-                    assignedDomain: domain.split(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`)[0],
+                    assignedDomain: domain.split(`.${process.env.NEXT_PUBLIC_CLIENT_URL}`)[0],
                 },
                 {
                     customDomain: domain
