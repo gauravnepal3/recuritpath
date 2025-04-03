@@ -74,4 +74,5 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/static ./apps/main/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/public ./apps/main/public
 
-CMD pnpm prisma migrate deploy && node apps/main/server.js
+CMD pnpm --filter database prisma migrate deploy && node apps/main/server.js
+
