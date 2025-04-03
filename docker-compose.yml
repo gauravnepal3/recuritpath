@@ -1,35 +1,49 @@
-version: "3"
+version: "3.8"
 
 services:
+  # Your existing services
   main:
     container_name: main
     build:
       context: .
       dockerfile: ./apps/main/Dockerfile
-    restart: always
+    depends_on:
+      - database-migrations  # Wait for migrations to complete
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
     ports:
       - 3000:3000
     networks:
       - app_network
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   client:
     container_name: client
     build:
       context: .
       dockerfile: ./apps/client/Dockerfile
-    restart: always
+    depends_on:
+      - database-migrations  # Wait for migrations to complete
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
     ports:
       - 3001:3001
     networks:
       - app_network
+
+  # New migration service
+  database-migrations:
+    container_name: database-migrations
+    build:
+      context: .
+      dockerfile: ./packages/database/Dockerfile
     environment:
       DATABASE_URL: ${DATABASE_URL}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - app_network
+    # Optional: uncomment if you want to run migrations manually
+    # command: ["pnpm", "exec", "prisma", "migrate", "deploy"]
+    # Uncomment for production to prevent automatic migrations
+    # restart: "no"
 
 networks:
   app_network:
