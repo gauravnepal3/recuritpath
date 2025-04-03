@@ -74,4 +74,7 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/client/.next/static ./apps
 COPY --from=installer --chown=nextjs:nodejs /app/apps/client/public ./apps/client/public
 
 EXPOSE 3000
+ENV PORT=3000
+# Run entrypoint script
+ENV HOSTNAME="0.0.0.0"
 CMD node apps/client/server.js
