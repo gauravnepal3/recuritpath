@@ -2,6 +2,7 @@ import { Resend } from "resend";
 import { SESClient, SendEmailCommand, SendEmailCommandInput } from "@aws-sdk/client-ses";
 import * as handlebars from "handlebars";
 import * as fs from "fs"; // For reading files (e.g., attachments or templates)
+import path from "path";
 
 const sesClient = new SESClient({
   region: process.env.AWS_REGION!,
@@ -138,22 +139,33 @@ export const sendTwoFactorTokenEmail = async (email: string, token: string) => {
 
 export const sendPasswordResetEmail = async (email: string, token: string) => {
   const resetLink = `${domain}/auth/new-password?token=${token}`;
-
-  await resend.emails.send({
-    from: "gauravknepal@gmail.com",
-    to: email,
-    subject: "Reset your password",
-    html: `<p>Click <a href="${resetLink}">here</a> to reset password.</p>`,
-  });
+  await sendEmail({
+    from: "auth@requro.com",
+    to: [email],
+    subject: "Confirm your email",
+    body: "Click the link to confirm your email",
+    htmlTemplate: {
+      filePath: path.join(process.cwd(), "mailTemplates", "resetPassword.hbs"),
+      context: {
+        resetLink: resetLink,
+      },
+    },
+  })
 };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   const confirmLink = `${domain}/auth/new-verification?token=${token}`;
 
-  await resend.emails.send({
-    from: "gauravknepal@gmail.com",
-    to: email,
+  await sendEmail({
+    from: "auth@requro.com",
+    to: [email],
     subject: "Confirm your email",
-    html: `<p>Click <a href="${confirmLink}">here</a> to confirm email.</p>`,
-  });
+    body: "Click the link to confirm your email",
+    htmlTemplate: {
+      filePath: path.join(process.cwd(), "mailTemplates", "signupInvite.hbs"),
+      context: {
+        inviteLink: confirmLink,
+      },
+    },
+  })
 };
