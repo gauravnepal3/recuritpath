@@ -7,6 +7,7 @@ export const publicRoutes = [
   "/auth/new-verification",
   '/api/emails/webhook',
   '/api/paddle/webhook',
+  '/api/health'
   // 'api/organization/invite'
 ];
 
