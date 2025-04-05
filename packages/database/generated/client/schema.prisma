@@ -1,0 +1,382 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/client"
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum OrganizationRole {
+  OWNER
+  INTERVIEWER
+}
+
+model OrganizationUserRole {
+  id   String           @id @default(cuid())
+  role OrganizationRole
+
+  organizationId String
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  email String // Keep this to track invited users
+
+  userId String? // Relate to User via ID instead of email
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  status    String   @default("ACTIVE")
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id                       String                     @id @default(cuid())
+  name                     String?
+  email                    String?                    @unique
+  emailVerified            DateTime?
+  image                    String?
+  password                 String?
+  role                     UserRole                   @default(USER)
+  accounts                 Account[]
+  organizations            OrganizationUserRole[]
+  isTwoFactorEnabled       Boolean                    @default(false)
+  twoFactorConfirmation    TwoFactorConfirmation?
+  candidateTimeline        CandidateTimeline[]
+  emailMessage             EmailMessage[]
+  organizationSubscription OrganizationSubscription[]
+
+  NotificationReceipt NotificationReceipt[]
+
+  Notification Notification[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+
+
+model VerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+model TwoFactorConfirmation {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+}
+
+model Organization {
+  id                       String                     @id @default(cuid())
+  name                     String
+  url                      String?
+  logo                     String?
+  assignedDomain          String?
+  customDomain             String?
+  // isProActivated Boolean  @default(false)
+  organizationRole         OrganizationUserRole[]
+  organizationActionLog    OrganizationActivityLog[]
+  jobPost                  JobPost[]
+  payment                  Payment[]
+  jobPreview               JobPreview[]
+  organizationSubscription OrganizationSubscription[]
+  createdAt                DateTime                   @default(now())
+
+  Notification Notification[]
+}
+
+model OrganizationSubscription {
+  id String @id @default(cuid())
+
+  referalId        String?
+  paymentHandler   String
+  organizationId   String
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+  status           SubscriptionStatus @default(FREE)
+  subscriptionType String
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: NoAction)
+
+  createdAt DateTime @default(now())
+  expiresOn DateTime
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  organizationId  String
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  paddlePaymentId String        @unique
+  amount          Float //Amount in Penny
+  currency        String
+  status          PaymentStatus
+  createdAt       DateTime      @default(now())
+}
+
+enum PaymentStatus {
+  SUCCESS
+  FAILED
+}
+
+enum SubscriptionStatus {
+  FREE
+  ACTIVE
+  CANCELED
+  EXPIRED
+}
+
+enum EmailDirection {
+  SENT
+  RECEIVED
+}
+
+model OrganizationActivityLog {
+  id     String @id @default(cuid())
+  action String
+
+  organizationId String
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  createdAt DateTime @default(now())
+}
+
+model JobPost {
+  id                   String       @id @default(cuid())
+  title                String
+  description          String?
+  category             String?
+  employmentType       String?
+  country              String?
+  city                 String?
+  remoteOption         String?
+  countryResidence     String?      @default("No")
+  countryListResidence String[]     @default([])
+  displaySalary        String?      @default("Not Shown")
+  currency             String?
+  salaryAmount         Float? // Optional number
+  minimumAmount        Float? // Optional number
+  maximumAmount        Float? // Optional number
+  isPublished          Boolean      @default(false)
+  isScheduled          Boolean      @default(false)
+  isArchived           Boolean      @default(false)
+  dateStart            DateTime?
+  dateEnd              DateTime?
+  organizationId       String
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  jobApplication       JobApplication[]
+  jobStage             JobStage[]
+  jobPreview           JobPreview[]
+  candidateApplication CandidateApplication[]
+  createdAt            DateTime               @default(now())
+
+  CandidateTimeline CandidateTimeline[]
+
+  JobMailingTemplate JobMailingTemplate[]
+}
+
+model JobApplication {
+  id           String   @id @default(cuid())
+  label        String
+  dataType     String
+  option       String[] @default([])
+  rule         String   @default("Optional")
+  questionType String   @default("Default")
+  isDeleted    Boolean  @default(false)
+
+  jobId   String
+  jobPost JobPost @relation(fields: [jobId], references: [id], onDelete: NoAction)
+
+  formResponse FormResponse[]
+  createdAt DateTime @default(now())
+}
+
+model CandidateApplication {
+  id        String   @id @default(cuid())
+  jobId     String
+  createdAt DateTime @default(now())
+  stageId   String
+
+  jobPost       JobPost        @relation(fields: [jobId], references: [id], onDelete: NoAction)
+  jobStage      JobStage       @relation(fields: [stageId], references: [id], onDelete: NoAction)
+  formResponses FormResponse[]
+
+  emailMessage      EmailMessage[]
+  CandidateTimeline CandidateTimeline[]
+}
+
+model CandidateReview {
+  id                String              @id @default(cuid())
+  description       String?
+  verdict           String
+  createdAt         DateTime            @default(now())
+  candidateTimeline CandidateTimeline[]
+}
+
+model CandidateTimeline {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  userId       String?
+  actionType   String
+  jobId        String
+  timelineText String
+  comment      String?
+  reviewId     String?
+  candidateId  String
+
+  candidateReview      CandidateReview?     @relation(fields: [reviewId], references: [id])
+  candidateApplication CandidateApplication @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobPost              JobPost              @relation(fields: [jobId], references: [id])
+  user                 User?                @relation(fields: [userId], references: [id])
+}
+
+model FormResponse {
+  id                     String   @id @default(cuid())
+  candidateApplicationId String
+  jobApplicationId       String
+  label                  String // Store the label at the time of submission
+  value                  String?
+  createdAt              DateTime @default(now())
+
+  candidateApplication CandidateApplication @relation(fields: [candidateApplicationId], references: [id])
+  jobApplication       JobApplication       @relation(fields: [jobApplicationId], references: [id])
+}
+
+model JobPreview {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  isExpired Boolean  @default(false)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction)
+
+  jobId   String
+  jobPost JobPost @relation(fields: [jobId], references: [id], onDelete: NoAction)
+}
+
+model JobStage {
+  id           String  @id @default(cuid())
+  name         String
+  isDeletable  Boolean @default(false)
+  isDeleted    Boolean @default(false)
+  displayOrder Int
+
+  jobId     String
+  jobPost   JobPost  @relation(fields: [jobId], references: [id], onDelete: NoAction)
+  createdAt DateTime @default(now())
+
+  candidateStage CandidateApplication[]
+}
+
+model JobMailingTemplate{
+  id           String  @id @default(cuid())
+  name         String
+  subject      String
+  body         String
+  createdAt    DateTime @default(now())
+  jobId        String
+  jobPost      JobPost  @relation(fields: [jobId], references: [id], onDelete: NoAction)
+}
+
+model EmailMessage {
+  id              String               @id @default(uuid()) // Unique ID for the database
+  messageId       String               @unique // The Message-ID of the email
+  parentMessageId String?              @unique // In-Reply-To (if it's a reply)
+  sender          String // Email of the sender
+  recipient       String // Email of the recipient
+  subject         String
+  body            String // Full email content
+  s3Url           String? // Optional, if email is stored in S3
+  direction       EmailDirection // SENT or RECEIVED
+  createdAt       DateTime             @default(now())
+  userId          String
+  candidateId     String
+  // Relations
+  user            User                 @relation(fields: [userId], references: [id])
+  candidate       CandidateApplication @relation(fields: [candidateId], references: [id])
+  parentMessage   EmailMessage?        @relation("MessageThread", fields: [parentMessageId], references: [messageId])
+  replies         EmailMessage[]       @relation("MessageThread")
+
+  @@index([parentMessageId]) // Index for faster lookups
+}
+
+model Notification {
+  id             String    @id @default(cuid())
+  message        String
+  createdAt      DateTime  @default(now())
+  type           String    @default("PERSONAL") // PERSONAL | ORGANIZATION
+  category       String    @default("GENERAL") // JOB_UPDATE | PAYMENT | SYSTEM_ALERT | etc.
+  actionUrl      String?
+  priority       String    @default("NORMAL") // ALL |
+  metadata       Json?
+  // If the notification is for a specific user
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // If the notification is for an organization
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+
+  // Relationship for tracking read status
+  receipts       NotificationReceipt[]
+}
+
+model NotificationReceipt {
+  id             String   @id @default(cuid())
+  notificationId String
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  userId         String
+  user           User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isRead         Boolean  @default(false)
+  readAt         DateTime?
+}
