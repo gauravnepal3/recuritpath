@@ -16,10 +16,7 @@
     "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "maxNodeModuleJsDepth": 2,
-    "disableReferencedProjectLoad": true,
     "target": "ES2022"
   }
 }
