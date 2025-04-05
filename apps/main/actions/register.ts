@@ -10,6 +10,8 @@ import { sendVerificationEmail } from "@/lib/mail";
 import { generateVerificationToken } from "@/lib/tokens";
 
 export const register = async (values: z.infer<typeof RegisterSchema>) => {
+  try {
+
   const validatedFields = RegisterSchema.safeParse(values);
 
   if (!validatedFields.success) {
@@ -41,4 +43,8 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
   );
 
   return { success: "Confirmation email sent!" };
+  } catch (error) {
+    console.error("Error in register function:", error);
+    return { error: "An error occurred during registration." };
+  }
 };

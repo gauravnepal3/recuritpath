@@ -24,6 +24,7 @@ export const login = async (
   values: z.infer<typeof LoginSchema>,
   callbackUrl?: string | null,
 ) => {
+  try {
   const validatedFields = LoginSchema.safeParse(values);
 
   if (!validatedFields.success) {
@@ -109,5 +110,10 @@ export const login = async (
     })
   } catch (error) {
     throw error;
+    }
+  }
+  catch (error) {
+    console.error("Error in login function:", error);
+    return { error: "An error occurred during login." };
   }
 };
