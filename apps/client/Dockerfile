@@ -52,6 +52,8 @@ COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 RUN pnpm install --unsafe-perm
 
 COPY --from=builder /app/out/full/ .
+# After installing packages and before `pnpm run generate`
+COPY --from=builder /app/packages/database ./packages/database
 RUN pnpm run generate
 RUN pnpm turbo build
 
