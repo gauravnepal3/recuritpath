@@ -53,7 +53,6 @@ RUN pnpm install --unsafe-perm
 
 COPY --from=builder /app/out/full/ .
 # After installing packages and before `pnpm run generate`
-COPY --from=builder /app/packages/database ./packages/database
 RUN pnpm run generate
 RUN pnpm turbo build
 
@@ -72,6 +71,8 @@ RUN chmod +x /app/entrypoint.sh
 USER nextjs
 
 COPY --from=installer --chown=nextjs:nodejs /app/apps/client/.next/standalone ./
+# Copy generated Prisma client
+COPY --from=installer --chown=nextjs:nodejs /app/packages/database/generated /app/packages/database/generated
 COPY --from=installer --chown=nextjs:nodejs /app/apps/client/.next/static ./apps/client/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/client/public ./apps/client/public
 
