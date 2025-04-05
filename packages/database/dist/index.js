@@ -5895,8 +5895,8 @@ model NotificationReceipt {
       rootEnvPath: config2.relativeEnvPaths.rootEnvPath && path.resolve(config2.dirname, config2.relativeEnvPaths.rootEnvPath),
       schemaEnvPath: config2.relativeEnvPaths.schemaEnvPath && path.resolve(config2.dirname, config2.relativeEnvPaths.schemaEnvPath)
     });
-    var PrismaClient2 = getPrismaClient2(config2);
-    exports2.PrismaClient = PrismaClient2;
+    var PrismaClient = getPrismaClient2(config2);
+    exports2.PrismaClient = PrismaClient;
     Object.assign(exports2, Prisma);
     path.join(__dirname, "libquery_engine-darwin-arm64.dylib.node");
     path.join(process.cwd(), "generated/client/libquery_engine-darwin-arm64.dylib.node");

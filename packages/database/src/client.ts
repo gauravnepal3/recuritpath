@@ -1,8 +1,10 @@
-import { PrismaClient } from "../generated/client";
+import { PrismaClient as GeneratedPrismaClient } from "../generated/client";
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+// Break complex type aliasing
+type DB = GeneratedPrismaClient;
 
-export const prisma =
-    globalForPrisma.prisma || new PrismaClient();
+const globalForPrisma = global as unknown as { prisma: DB };
+
+export const prisma = globalForPrisma.prisma || new GeneratedPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
