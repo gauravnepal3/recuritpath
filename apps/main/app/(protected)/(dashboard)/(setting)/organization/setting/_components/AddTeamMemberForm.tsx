@@ -38,7 +38,7 @@ import {
     SelectValue
 } from "@repo/ui/components/select"
 import { addTeamMember } from "@/actions/organization"
-import { OrganizationRole } from "@prisma/client"
+import { OrganizationRole } from "@repo/database"
 
 const formSchema = z.object({
     email: z.string({ required_error: "Email is required" }).email({ message: "Email format mismatch!" }),

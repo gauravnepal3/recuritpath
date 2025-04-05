@@ -1,6 +1,6 @@
 'use client';
 import { updateJobStages } from '@/actions/jobs';
-import { JobStage } from '@prisma/client';
+import { JobStage } from '@repo/database';
 import React, { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 

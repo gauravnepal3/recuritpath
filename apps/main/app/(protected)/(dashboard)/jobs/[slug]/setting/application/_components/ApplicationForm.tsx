@@ -44,7 +44,7 @@ import {
     DropdownMenuTrigger,
 } from "@repo/ui/components/dropdown-menu"
 
-import { JobApplication } from "@prisma/client"
+import { JobApplication } from "@repo/database"
 import { updateDeleteStatusAdditionalQuestion, updateJobApplication } from "@/actions/jobs"
 import { AdditionalQuestionDialog } from "./AdditionalQuestionDialog"
 import { Badge } from "@repo/ui/components/badge"

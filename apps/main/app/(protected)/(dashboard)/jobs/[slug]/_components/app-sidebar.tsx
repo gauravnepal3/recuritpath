@@ -16,7 +16,7 @@ import { NavSecondary } from "./nav-secondary"
 import { Archive, BrainCircuit, Folder, Inbox, LifeBuoy, Send, Settings } from "lucide-react"
 import { JobStages } from "./job-stages"
 import { Separator } from "@repo/ui/components/separator"
-import { JobPost } from "@prisma/client"
+import { JobPost } from "@repo/database"
 interface AppSidebarProps {
 
     jobDetails: JobPost &

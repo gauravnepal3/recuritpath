@@ -46,7 +46,7 @@ import countries from '@repo/ui/data/countries.json'
 import { MultiSelect } from "@repo/ui/components/multi-select"
 import { Cat, Dog, Fish, Rabbit, Turtle } from "lucide-react";
 import ChildForm from "./ChildForm"
-import { JobPost } from "@prisma/client"
+import { JobPost } from "@repo/database"
 import { updateJobDetails } from "@/actions/jobs"
 import { Calendar } from "@repo/ui/components/calendar"
 const formSchema = z.object({

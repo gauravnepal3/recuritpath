@@ -30,7 +30,7 @@ import {
     SelectValue,
 } from "@repo/ui/components/select"
 import { addAdditionalQuestions, updateAdditionalQuestions } from "@/actions/jobs"
-import { JobApplication } from "@prisma/client"
+import { JobApplication } from "@repo/database"
 import { DropdownMenuItem } from "@repo/ui/components/dropdown-menu"
 
 const formSchema = z

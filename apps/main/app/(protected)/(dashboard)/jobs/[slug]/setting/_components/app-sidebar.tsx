@@ -15,7 +15,7 @@ import {
 import { NavSecondary } from "./nav-secondary"
 import { Archive, Folder, Inbox, LifeBuoy, Send, Settings } from "lucide-react"
 import { Separator } from "@repo/ui/components/separator"
-import { JobPost } from "@prisma/client"
+import { JobPost } from "@repo/database"
 import { JobPublishDialog } from "./JobPublishDialog"
 interface AppSidebarProps {
 
