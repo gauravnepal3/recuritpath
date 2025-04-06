@@ -56,6 +56,20 @@ RUN pnpm install --unsafe-perm
 COPY --from=builder /app/out/full/ .
 # After installing packages and before `pnpm run generate`
 RUN pnpm run generate
+
+# Set build arguments for public environment variables
+ARG NEXT_PUBLIC_PADDLE_CLIENT_KEY
+ARG NEXT_PUBLIC_PADDLE_ENV
+ARG NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+ARG NEXT_PUBLIC_APP_URL
+ARG NEXT_PUBLIC_CLIENT_URL
+
+# Set environment variables for Next.js build process
+ENV NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+ENV NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
+ENV NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+ENV NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL}
 RUN pnpm turbo build
 
 # Runner stage
