@@ -7,6 +7,12 @@ volumes:
 services:
   main:
     container_name: main
+    args:
+        NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+        NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
     build:
       context: .
       dockerfile: ./apps/main/Dockerfile
@@ -29,12 +35,24 @@ services:
 
   client:
     container_name: client
+    args:
+        NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+        NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
     build:
       context: .
       dockerfile: ./apps/client/Dockerfile
     restart: always
     ports:
       - 3001:3001
+    environment:
+      - NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+      - NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL}
     dns:
       - 8.8.8.8
       - 1.1.1.1
