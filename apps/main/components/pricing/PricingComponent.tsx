@@ -16,6 +16,9 @@ export function PricingComponent({ country }: Props) {
     const { prices, loading } = usePaddlePrices(paddle, country);
 
     useEffect(() => {
+        console.log('Paddle Client Key:', process.env.NEXT_PUBLIC_PADDLE_CLIENT_KEY);
+        console.log('Paddle Environment:', process.env.NEXT_PUBLIC_PADDLE_ENV);
+
         if (process.env.NEXT_PUBLIC_PADDLE_CLIENT_KEY && process.env.NEXT_PUBLIC_PADDLE_ENV) {
             console.log("Initializing Paddle...");
             initializePaddle({
@@ -30,6 +33,7 @@ export function PricingComponent({ country }: Props) {
             console.warn("Missing Paddle env vars");
         }
     }, []);
+
 
     return (
         <div className="mx-auto relative ">
