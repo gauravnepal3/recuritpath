@@ -13,6 +13,9 @@ services:
     restart: always
     ports:
       - 3000:3000
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - app_network
     depends_on:
@@ -26,6 +29,9 @@ services:
     restart: always
     ports:
       - 3001:3001
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - app_network
     depends_on:
