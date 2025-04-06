@@ -8,6 +8,12 @@ services:
   main:
     container_name: main
     build:
+      args:
+        NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+        NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
       context: .
       dockerfile: ./apps/main/Dockerfile
     restart: always
@@ -30,6 +36,12 @@ services:
   client:
     container_name: client
     build:
+      args:
+        NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+        NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
       context: .
       dockerfile: ./apps/client/Dockerfile
     restart: always
