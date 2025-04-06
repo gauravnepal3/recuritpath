@@ -40,6 +40,8 @@ RUN apk update && apk add --no-cache \
     && ln -sf python3 /usr/bin/python
 
 WORKDIR /app
+# 🔧 Add curl here — this is the final image your app runs in
+RUN apk add --no-cache curl
 RUN yarn global add pnpm turbo
 
 # Explicitly set Python path

@@ -61,7 +61,8 @@ RUN pnpm turbo build
 # Runner stage
 FROM base AS runner
 WORKDIR /app
-
+# 🔧 Add curl here — this is the final image your app runs in
+RUN apk add --no-cache curl
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 RUN addgroup --system --gid 1001 nodejs
