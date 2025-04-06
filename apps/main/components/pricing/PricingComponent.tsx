@@ -16,14 +16,16 @@ export function PricingComponent({ country }: Props) {
 
     useEffect(() => {
         if (process.env.NEXT_PUBLIC_PADDLE_CLIENT_KEY && process.env.NEXT_PUBLIC_PADDLE_ENV) {
+            console.log("Initializing Paddle...");
             initializePaddle({
                 token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_KEY,
                 environment: process.env.NEXT_PUBLIC_PADDLE_ENV as Environments,
             }).then((paddle) => {
-                if (paddle) {
-                    setPaddle(paddle);
-                }
-            });
+                console.log("Paddle initialized", paddle);
+                setPaddle(paddle);
+            }).catch(console.error);
+        } else {
+            console.warn("Missing Paddle env vars");
         }
     }, []);
 

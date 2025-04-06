@@ -25,17 +25,28 @@ export function usePaddlePrices(
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    if (!paddle) {
+      return;
+    }
+
     const paddlePricePreviewRequest: Partial<PricePreviewParams> = {
       items: getLineItems(),
       ...(country !== 'OTHERS' && { address: { countryCode: country } }),
     };
 
-    setLoading(true);
-
-    paddle?.PricePreview(paddlePricePreviewRequest as PricePreviewParams).then((prices) => {
-      setPrices((prevState) => ({ ...prevState, ...getPriceAmounts(prices) }));
+    const fetchPrices = async () => {
+      try {
+      setLoading(true);
+      const prices = await paddle.PricePreview(paddlePricePreviewRequest as PricePreviewParams);
+      setPrices(getPriceAmounts(prices));
+    } catch (err) {
+      console.error("Error fetching prices from Paddle:", err);
+    } finally {
       setLoading(false);
-    });
+      }
+    };
+
+    fetchPrices();
   }, [country, paddle]);
   return { prices, loading };
 }
