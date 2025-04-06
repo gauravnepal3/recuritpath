@@ -26,7 +26,6 @@ RUN turbo prune client --docker
 # Installer stage
 FROM base AS installer
 RUN apk update && apk add --no-cache \
-    curl \
     libc6-compat \
     python3 \
     make \
@@ -42,6 +41,7 @@ RUN apk update && apk add --no-cache \
     && ln -sf python3 /usr/bin/python
 
 WORKDIR /app
+RUN apk add --no-cache curl
 RUN yarn global add pnpm turbo
 
 # Explicitly set Python path
