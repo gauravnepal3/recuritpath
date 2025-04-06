@@ -6,7 +6,7 @@ type DB = GeneratedPrismaClient;
 const globalForPrisma = global as unknown as { prisma: DB };
 
 export const prisma = globalForPrisma.prisma || new GeneratedPrismaClient({
-    log: ['query', 'info', 'warn', 'error'],
+    log: ['error'],
 }
 
 );

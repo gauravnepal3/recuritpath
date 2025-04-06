@@ -5915,7 +5915,11 @@ module.exports = __toCommonJS(index_exports);
 // src/client.ts
 var import_client = __toESM(require_client());
 var globalForPrisma = global;
-var prisma = globalForPrisma.prisma || new import_client.PrismaClient();
+var prisma = globalForPrisma.prisma || new import_client.PrismaClient(
+  {
+    log: ["error"]
+  }
+);
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 // src/index.ts

@@ -3,6 +3,7 @@ FROM node:20-alpine3.16 AS base
 # Builder stage
 FROM base AS builder
 RUN apk update && apk add --no-cache \
+    curl \
     libc6-compat \
     python3 \
     make \
@@ -25,6 +26,7 @@ RUN turbo prune client --docker
 # Installer stage
 FROM base AS installer
 RUN apk update && apk add --no-cache \
+    curl \
     libc6-compat \
     python3 \
     make \

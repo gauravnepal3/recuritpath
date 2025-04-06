@@ -5912,7 +5912,11 @@ __export(client_exports, {
 module.exports = __toCommonJS(client_exports);
 var import_client = __toESM(require_client());
 var globalForPrisma = global;
-var prisma = globalForPrisma.prisma || new import_client.PrismaClient();
+var prisma = globalForPrisma.prisma || new import_client.PrismaClient(
+  {
+    log: ["error"]
+  }
+);
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
