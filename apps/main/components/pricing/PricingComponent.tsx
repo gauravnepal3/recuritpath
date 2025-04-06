@@ -1,3 +1,4 @@
+'use client'
 import { PriceCards } from '@/components/pricing/price-card';
 import { useEffect, useState } from 'react';
 import { BillingFrequency, IBillingFrequency } from '@/constants/billing-frequency';
@@ -25,6 +26,7 @@ export function PricingComponent({ country }: Props) {
                 setPaddle(paddle);
             }).catch(console.error);
         } else {
+            console.error(process.env.NEXT_PUBLIC_PADDLE_CLIENT_KEY, process.env.NEXT_PUBLIC_PADDLE_ENV);
             console.warn("Missing Paddle env vars");
         }
     }, []);
