@@ -10,11 +10,15 @@ import { AddJobDialog } from "../_components/AddJobDialog";
 import { prisma } from "@repo/database"
 import { Badge } from "@repo/ui/components/badge";
 import { Inbox, User } from "lucide-react";
+import { Metadata } from "next";
 const font = Poppins({
   subsets: ["latin"],
   weight: ["600"]
 })
 
+export const metadata: Metadata = {
+  title: 'Dashboard | Requro',
+}
 const getJobDetails = async (userID: string, organizationID: string) => {
   return await prisma.jobPost.findMany({
     where: {

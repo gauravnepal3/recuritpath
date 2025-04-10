@@ -18,6 +18,8 @@ import { Ellipsis } from 'lucide-react';
 import { Button, buttonVariants } from '@repo/ui/components/button';
 import { AddTeamMember } from './_components/AddTeamMember';
 import { cn } from '@/lib/utils';
+import { getOrganizationTier } from '@/lib/subscription';
+import { TierFeature } from '@/components/tier-feature';
 
 const getOrganizationDetails = async ({ organizationId }: { organizationId: string }) => {
     return await prisma.organization.findFirst({
@@ -51,6 +53,8 @@ const page = async () => {
     }
     const activeOrganization = cookieProvider.get('organization')
     const organizationDetails = await getOrganizationDetails({ organizationId: activeOrganization?.value ?? '' })
+    const organizationTier = await getOrganizationTier()
+    console.log(organizationTier)
     if (!organizationDetails) {
         return 404;
     }
@@ -70,7 +74,8 @@ const page = async () => {
                     <div className="text-sm font-bold">
                         Team Members
                     </div>
-                    <AddTeamMember userId={user.id} organizationId={organizationDetails.id} />
+                    {organizationTier === "Free" && <TierFeature><Button>Add Member</Button></TierFeature>}
+                    {organizationTier !== "Free" && <AddTeamMember userId={user.id} organizationId={organizationDetails.id} />}
                 </div>
                 <div className="">
                     {organizationDetails.organizationRole.map(x => (

@@ -78,6 +78,7 @@ export default function JobPublishForm({ setOpen, jobDetails, userID, jobID, org
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         try {
+            console.log("Form submitted with values:", values);
             const promise = publishJobPost({ userID: userID, jobID: jobID, data: values, organizationID: organizationID })
             toast.promise(
                 promise.then((response) => {

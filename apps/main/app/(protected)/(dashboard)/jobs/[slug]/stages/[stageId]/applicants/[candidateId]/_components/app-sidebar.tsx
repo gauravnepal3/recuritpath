@@ -22,6 +22,7 @@ import { moveToStage } from "@/actions/jobs"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { MoveToStage } from "./MovetoStage"
+import { ArchiveCandidate } from "./ArchiveCandidate"
 
 type applicantDataType = {
     id: string;
@@ -100,7 +101,7 @@ export function AppSidebar({ applicantData, jobID, candidateID, stageID, userID 
 
                 </SidebarGroupLabel>
                 <SidebarGroupLabel className=" mt-5 flex">
-                    {!(currentJobStage?.name == "Hired" || currentJobStage?.name == "Archive") &&
+                    {!(currentJobStage?.name == "Hired" || currentJobStage?.name == "Archived") &&
                         <Button onClick={() => {
                             try {
                                 const promise = moveToStage({ userID: userID, candidateID: candidateID, stageID: nextJobStage?.id ?? '' })
@@ -139,7 +140,7 @@ export function AppSidebar({ applicantData, jobID, candidateID, stageID, userID 
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <MoveToStage userID={userID} candidateID={candidateID} jobID={jobID} jobStages={applicantData.jobPost.jobStage.map(x => ({ label: x.name, value: x.id }))} />
-                            <DropdownMenuItem>Archive</DropdownMenuItem>
+                            <ArchiveCandidate userID={userID} candidateID={candidateID} jobID={jobID} jobStages={applicantData.jobPost.jobStage.map(x => ({ label: x.name, value: x.id }))} />
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </SidebarGroupLabel>

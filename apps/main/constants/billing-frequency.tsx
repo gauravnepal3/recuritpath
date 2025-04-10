@@ -6,4 +6,5 @@ export interface IBillingFrequency {
 
 export const BillingFrequency: IBillingFrequency[] = [
     { value: 'month', label: 'Monthly', priceSuffix: 'per month' },
+    { value: 'year', label: 'Annually', priceSuffix: 'per year' },
 ];

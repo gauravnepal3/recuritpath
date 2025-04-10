@@ -5,8 +5,7 @@ import { PricingTier } from '@/constants/price-tier';
 export type PaddlePrices = Record<string, string>;
 
 function getLineItems(): PricePreviewParams['items'] {
-  const priceId = PricingTier.map((tier) => ([tier.priceId.month]));
-  console.log(priceId)
+  const priceId = PricingTier.map((tier) => [tier.priceId.month, tier.priceId.year]);
   return priceId.flat().filter((priceId): priceId is string => !!priceId).map((priceId) => ({ priceId, quantity: 1 }));
 }
 

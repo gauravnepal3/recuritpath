@@ -24,25 +24,15 @@ export function NavSecondary({
             url: "/account"
         },
         {
-            icon: Bell,
-            title: "Notification",
-            url: "/account/notifications"
+            icon: User,
+            title: "Change Password",
+            url: "/change-password"
         },
-        {
-            icon: BriefcaseBusiness,
-            title: "Manage Organization",
-            url: "/account/organization"
-        },
-        {
-            icon: Globe,
-            title: "Domains",
-            url: "/account/domains"
-        },
-        {
-            icon: Clipboard,
-            title: "Billing",
-            url: "/account/billing"
-        }
+        // {
+        //     icon: Bell,
+        //     title: "Notification",
+        //     url: "/account/notifications"
+        // },
     ]
     return (
         <SidebarGroup className="mt-11" {...props}>

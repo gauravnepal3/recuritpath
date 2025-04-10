@@ -33,8 +33,6 @@ import {
     SelectTrigger,
     SelectValue
 } from "@repo/ui/components/select"
-import { Input } from "@repo/ui/components/input"
-import { Label } from "@repo/ui/components/label"
 import { DropdownMenuItem } from "@repo/ui/components/dropdown-menu"
 import { toast } from "sonner"
 import { moveToStage } from "@/actions/jobs"
@@ -107,7 +105,7 @@ export function MoveToStage({ jobStages, userID, candidateID, jobID }: { jobStag
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            {jobStages.map(x => (
+                                            {jobStages.filter(x => x.label !== "Archived").map(x => (
                                                 <SelectItem key={x.value} value={x.value}>{x.label}</SelectItem>
                                             ))}
                                         </SelectContent>

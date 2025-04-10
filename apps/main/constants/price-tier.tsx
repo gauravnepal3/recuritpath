@@ -71,7 +71,7 @@ export const PricingTier: Tier[] = [
             }
         ],
         featured: false,
-        priceId: { month: 'pri_01jm6ytkrvtj49qnhyhmngaqeh' },
+        priceId: { month: 'pri_01jm6ytkrvtj49qnhyhmngaqeh', year: 'pri_01jrd3c7jkysf2cyqqd6jbe2nd' },
     },
     {
         name: 'Pro',
@@ -137,7 +137,7 @@ export const PricingTier: Tier[] = [
 
         description: 'Perfect for small teams looking to grow their recruitment efforts.',
         featured: true,
-        priceId: { month: 'pri_01jm4gjc1gvqkttcb1axf86617' },
+        priceId: { month: 'pri_01jm4gjc1gvqkttcb1axf86617', year: 'pri_01jrd38a0yyknx5a2eegmmhgea' },
     },
     {
         name: 'Premium',
@@ -202,6 +202,6 @@ export const PricingTier: Tier[] = [
             }
         ],
         featured: false,
-        priceId: { month: 'pri_01jm4gm28cyxwhtdajtnv2wz5x' },
+        priceId: { month: 'pri_01jm4gm28cyxwhtdajtnv2wz5x', year: 'pri_01jrd36jda3m9164njfr4m82bv' },
     },
 ];

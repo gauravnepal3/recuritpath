@@ -12,6 +12,7 @@ import { User } from "lucide-react" // Adjust icon import as necessary
 type applicantDataType = {
     name: string,
     candidateStage: {
+        available: boolean;
         id: string;
         stageId: string;
         formResponses: {
@@ -31,6 +32,7 @@ export function AppSidebar({ applicantsData, jobID }: { applicantsData: applican
                     .filter((response) => response.label === "Name" && response.value) // Ensure valid names
                     .map((response) => ({
                         title: response.value as string, // Ensure value is string
+                        available: stage.available,
                         url: `/jobs/${jobID}/stages/${applicantsData.candidateStage[0]?.stageId}/applicants/${stage.id}`,
                         icon: User,
                     }))

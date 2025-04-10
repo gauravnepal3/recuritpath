@@ -12,11 +12,15 @@ import { AppSidebar } from './_components/app-sidebar';
 import GeneratePreviewJob from '@/app/(protected)/_components/GeneratePreviewJob';
 import { ScrollArea } from '@repo/ui/components/scroll-area';
 import { format } from 'date-fns';
+import { Metadata } from 'next';
 interface ProtectedLayoutProps {
     children: React.ReactNode,
     params: Promise<{ slug: string }>
 };
 
+export const metadata: Metadata = {
+    title: 'Setting | Requro',
+}
 const getJobDetails = async (organizationID: string, userID: string, jobID: string) => {
     return await prisma.jobPost.findFirst({
         where: {
@@ -68,6 +72,7 @@ const JobLayout = async ({ children, params }: ProtectedLayoutProps) => {
     if (!jobDetails) {
         redirect('/')
     }
+
     return (
         <div className="">
             <div className="border-b w-full h-12 px-4 py-2">

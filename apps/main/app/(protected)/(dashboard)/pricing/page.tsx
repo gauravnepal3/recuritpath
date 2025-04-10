@@ -1,10 +1,15 @@
 import { Pricing } from '@/components/pricing/pricing'
 import React from 'react'
 import '@/styles/pricing.css';
-const PricingPage = () => {
-    return (
+import { prisma } from '@repo/database'
+import { getOrganizationTier } from '@/lib/subscription';
+const getCurrentPlan = async () => {
 
-        <Pricing />
+}
+const PricingPage = async () => {
+    const currentPlan = await getOrganizationTier()
+    return (
+        <Pricing currentPlan={currentPlan} />
     )
 }
 

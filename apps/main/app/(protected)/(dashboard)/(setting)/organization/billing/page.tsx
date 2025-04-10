@@ -4,14 +4,26 @@ import { Badge } from '@repo/ui/components/badge';
 import { Lock } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import React from 'react'
-import { prisma } from '@repo/database'
+import { Payment, prisma } from '@repo/database'
 import { cookies } from 'next/headers';
 import { Button } from '@repo/ui/components/button';
 import Link from 'next/link';
+import { TransactionTable } from './_components/TransactionTable';
 const getOrganizationSubscription = async (organizationId: string, userId: string) => {
     return await prisma.organizationSubscription.findFirst({
         where: {
             organizationId: organizationId
+        }
+    })
+}
+
+const getTransactionDetails = async (organizationId: string): Promise<Payment[]> => {
+    return await prisma.payment.findMany({
+        where: {
+            organizationId: organizationId
+        },
+        orderBy: {
+            createdAt: 'desc'
         }
     })
 }
@@ -26,6 +38,7 @@ const Account = async () => {
         redirect('/auth/login')
     }
     const organizationSubscription = await getOrganizationSubscription(organizationId, user.id)
+    const transitionDetails = await getTransactionDetails(organizationId)
     return (
         <div className='p-4'>
             <div className="text-xl font-bold">
@@ -42,6 +55,10 @@ const Account = async () => {
                     Upgrade
                 </Link>
             </div>
+            <div className="mt-10 font-semibold">
+                Transactions
+            </div>
+            <TransactionTable paymentData={transitionDetails.map(x => ({ id: x.id, amount: x.amount, date: x.createdAt, status: x.status }))} />
         </div>
     )
 }

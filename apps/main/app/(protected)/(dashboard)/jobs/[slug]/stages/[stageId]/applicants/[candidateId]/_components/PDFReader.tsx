@@ -10,9 +10,9 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     import.meta.url,
 ).toString();
 
-const PDFReader = ({ url }: { url: string }) => {
+const PDFReader = ({ url, pdfScale = 1 }: { url: string, pdfScale?: number }) => {
     const [numPages, setNumPages] = useState<number>();
-    const [scale, setScale] = useState<number>(3);
+    const [scale, setScale] = useState<number>(pdfScale);
     const containerRef = useRef<HTMLDivElement>(null);
 
     function onDocumentLoadSuccess({ numPages }: { numPages: number }) {

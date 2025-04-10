@@ -22,21 +22,12 @@ export default async function CheckoutPage() {
         redirect('/')
     }
     const organizationSubscription = await getOrganizationSubscription(organizationId, user.id)
-    if (organizationSubscription) {
-        redirect('/organization/billing')
-    }
     return (
         <div className={'w-full min-h-screen relative overflow-hidden light'}>
             <div
                 className={'mx-auto max-w-6xl relative px-[16px] md:px-[32px] py-4 flex flex-col gap-6 justify-between'}
             >
-                {!organizationSubscription ?
-                    <CheckoutContents organizationSubscription={organizationSubscription} userEmail={user.email} userId={user.id} organizationId={organizationId} />
-                    :
-                    <>
-
-                    </>
-                }
+                <CheckoutContents organizationSubscription={organizationSubscription} userEmail={user.email} userId={user.id} organizationId={organizationId} />
             </div>
         </div>
     );

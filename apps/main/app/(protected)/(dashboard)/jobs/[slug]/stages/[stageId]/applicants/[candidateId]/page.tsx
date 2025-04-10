@@ -208,7 +208,7 @@ const CandidatePage = async ({
                                 )}
 
                                 <AddComment userID={user.id} candidateID={candidateId} jobID={jobID} />
-                                <RequestReview userEmails={candidateData?.jobPost.organization.organizationRole?.map(x => x.email) ?? []} userID={user.id} candidateID={candidateId} jobID={jobID} />
+                                {/* <RequestReview userEmails={candidateData?.jobPost.organization.organizationRole?.map(x => x.email) ?? []} userID={user.id} candidateID={candidateId} jobID={jobID} /> */}
                             </div>
                         </div>
                     </div>

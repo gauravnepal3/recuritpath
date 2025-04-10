@@ -5,6 +5,10 @@ import { currentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { organizationRoleGuard, userDetails } from '@/lib/utils'
+import { getOrganizationTier } from '@/lib/subscription'
+import { sendEmail } from '@/lib/mail'
+import path from 'path'
+import { MailingTemplate } from '@/constants/mailing-template'
 
 
 const FormSchema = z.object({
@@ -335,6 +339,15 @@ export const publishJobPost = async ({ userID, organizationID, jobID, data }: { 
         const getOrganizationDetails = await prisma.organization.findFirst({
             where: {
                 id: organizationID
+            },
+            include: {
+                jobPost: {
+                    select: {
+                        id: true,
+                        isPublished: true,
+                        isScheduled: true,
+                    }
+                }
             }
         })
         if (!getOrganizationDetails) {
@@ -365,6 +378,25 @@ export const publishJobPost = async ({ userID, organizationID, jobID, data }: { 
         }
         let updateData;
         const { management, date_range } = validatedData.data
+        const organizationTier = await getOrganizationTier();
+        if (organizationTier === "Free" && management === "automatic") {
+            return {
+                type: "ERROR",
+                message: "This feature is only available on paid plans."
+            }
+        }
+        if (organizationTier === "Free" && getOrganizationDetails.jobPost.filter(x => x.isPublished === true || x.isScheduled === true).length > 0) {
+            return {
+                type: "ERROR",
+                message: "You can only publish one job at a time."
+            }
+        }
+        if (organizationTier === "Pro" && getOrganizationDetails.jobPost.filter(x => x.isPublished === true || x.isScheduled === true).length > 2) {
+            return {
+                type: "ERROR",
+                message: "You can only publish three job at a time."
+            }
+        }
         if (management === "manual") {
             updateData = {
                 isPublished: true,
@@ -938,6 +970,14 @@ export const moveToStage = async ({ userID, candidateID, stageID, confirmation }
         const candidateDetails = await prisma.candidateApplication.findFirst({
             where: {
                 id: candidateID
+            },
+            include: {
+                formResponses: true,
+                jobPost: {
+                    include: {
+                        organization: true
+                    }
+                }
             }
         })
         if (!candidateDetails) {
@@ -957,6 +997,39 @@ export const moveToStage = async ({ userID, candidateID, stageID, confirmation }
                 type: "ERROR",
                 message: "Invalid update request made!"
             }
+        }
+        const candidateName = candidateDetails.formResponses.find(x => x.label === "Name")?.value ?? '';
+        const jobTitle = candidateDetails.jobPost?.title ?? '';
+        const organizationName = candidateDetails.jobPost.organization?.name ?? '';
+
+
+
+        if (stageDetails.name === "Archived" && confirmation) {
+            const template = await prisma.jobMailingTemplate.findFirst({
+                where: {
+                    jobId: jobID,
+                    name: "Application Rejected"
+                }
+            })
+            const mailingTemplate = template ?? MailingTemplate.find(x => x.name === "Application Rejected")
+            const mailingMessage = mailingTemplate?.body
+                .replaceAll("{{CandidateName}}", candidateName)
+                .replaceAll("{{JobTitle}}", jobTitle)
+                .replaceAll("{{OrganizationName}}", organizationName);
+            sendEmail({
+                to: [candidateDetails.formResponses.filter(x => x.label === "Email")[0]?.value ?? ''],
+                from: 'career@requro.com',
+                subject: `An updated on your application for ${candidateDetails.jobPost.title}`,
+                body: `Hi ${candidateDetails.formResponses.filter(x => x.label === "Name")[0]?.value ?? ''},\n\nWe wanted to inform you that your application for the position of ${candidateDetails.jobPost.title} has been archived. \n\nIf you have any questions or would like to discuss this further, please feel free to reach out.\n\nBest regards,\nThe Requro Team`,
+                htmlTemplate: {
+                    filePath: path.join(process.cwd(), "mailTemplates", "applicationUpdateTemplate.hbs"),
+                    context: {
+                        title: `An updated on your application for ${candidateDetails.jobPost.title}`,
+                        message: mailingMessage
+                    }
+                }
+
+            })
         }
         try {
             const updatedCandidateStage = await prisma.candidateApplication.update({
