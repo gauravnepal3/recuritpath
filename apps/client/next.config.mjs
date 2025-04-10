@@ -4,6 +4,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'recruit-path.s3.ap-south-1.amazonaws.com',
+        port: '',
+        pathname: '/public-folder/**',
+        search: '',
+      },
+    ],
+  },
   output: 'standalone',
   experimental: {
     serverActions: {

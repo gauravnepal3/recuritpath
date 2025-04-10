@@ -27,10 +27,10 @@ const PreviewPage = async ({ previewID }: { previewID: string }) => {
                 <div className="border-b py-4 ">
                     {previewDetails.organization?.name}
                 </div>
-                <div className="mt-5">
+                <div className="mt-5 flex-col space-y-5">
                     {previewDetails.organization?.jobPost.map((x, index) => (
-                        <Link href={`/preview/${x.id}?preview=${previewID}`} className="" key={index}>
-                            <div className="border hover:border-primary p-4 rounded-lg">
+                        <Link href={`/preview/${x.id}?preview=${previewID}`} className="w-full mt-5 flex items-center justify-between rounded-lg px-3 py-4 border hover:bg-sidebar-accent" key={index}>
+                            <div className="">
 
                                 <div className="text-lg font-semibold">
                                     {x.title}

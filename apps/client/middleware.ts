@@ -1,17 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-
 export const config = {
     matcher: [
-        /*
-         * Match all paths except for:
-         * 1. /api routes
-         * 2. /_next (Next.js internals)
-         * 3. /_static (inside /public)
-         * 4. all root files inside /public (e.g. /favicon.ico)
-         */
-        "/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)",
+    /*
+     * Match all paths except for:
+     * 1. /api routes
+     * 2. /_next (Next.js internals)
+     * 3. /_static (inside /public)
+     * 4. all root files inside /public (e.g. /favicon.ico)
+     * 5. /preview (preview links)
+     */
+        "/((?!api/|_next/|_static/|_vercel|preview|[\\w-]+\\.\\w+).*)",
     ],
 };
+
+import { NextRequest, NextResponse } from "next/server";
 
 export default async function middleware(req: NextRequest) {
     const url = req.nextUrl;
@@ -21,22 +22,17 @@ export default async function middleware(req: NextRequest) {
         .get("host")!
         .replace(".localhost:3001", `.${process.env.NEXT_PUBLIC_CLIENT_URL}`);
 
-    const searchParams = req.nextUrl.searchParams.toString();
-    // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-    const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""
-        }`;
+    const searchParams = url.searchParams.toString();
+    const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""}`;
 
-
-    // rewrite root application to `/home` folder
     if (
         hostname === "localhost:3001" ||
         hostname === process.env.NEXT_PUBLIC_CLIENT_URL
     ) {
         return NextResponse.rewrite(
-            new URL(`/home${path === "/" ? "" : path}`, req.url),
+            new URL(`/home${path === "/" ? "" : path}`, req.url)
         );
     }
 
-    // rewrite everything else to `/[domain]/[slug] dynamic route
     return NextResponse.rewrite(new URL(`/${hostname}${path}`, req.url));
 }

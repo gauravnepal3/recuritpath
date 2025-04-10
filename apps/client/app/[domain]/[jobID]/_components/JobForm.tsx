@@ -53,14 +53,14 @@ export default function MyForm({ formDetails }: { formDetails: FormDetailsType[]
                     case "Email":
                         fieldSchema = z.string().email();
                         break;
-                    case "Phone":
-                        fieldSchema = z.string().min(10).max(15);
-                        break;
                     case "File":
                         fieldSchema = z.instanceof(File);
                         break;
                     case "Multiple Choice Question (Single Select)":
                         fieldSchema = z.string(); // Ensure the selected value is a string
+                        break;
+                    case "Multiple Choice Question (Multiple Select)":
+                        fieldSchema = z.array(z.string());
                         break;
                     default:
                         fieldSchema = z.string();
@@ -70,7 +70,12 @@ export default function MyForm({ formDetails }: { formDetails: FormDetailsType[]
                         fieldSchema = (fieldSchema as z.ZodType<File>).refine((file): file is File => file instanceof File && file.size > 0, {
                             message: "This field is required",
                         });
-                    } else {
+                    } else if (field.dataType === "Multiple Choice Question (Multiple Select)") {
+                        fieldSchema = (fieldSchema as z.ZodArray<z.ZodString>).min(1, {
+                            message: "Select at least one option",
+                        });
+                    }
+                    else {
                         if (fieldSchema instanceof z.ZodString) {
                             fieldSchema = fieldSchema.min(1, { message: "This field is required" });
                         }
@@ -95,6 +100,9 @@ export default function MyForm({ formDetails }: { formDetails: FormDetailsType[]
                         break;
                     case "Multiple Choice Question (Single Select)":
                         values[field.id] = ""; // Default to an empty string for select fields
+                        break;
+                    case "Multiple Choice Question (Multiple Select)":
+                        values[field.id] = [];
                         break;
                     default:
                         values[field.id] = ""; // Default to an empty string for other fields
@@ -212,16 +220,38 @@ export default function MyForm({ formDetails }: { formDetails: FormDetailsType[]
                                             ) : field.dataType === "Multiple Choice Question (Single Select)" ? (
                                                 <Select onValueChange={formField.onChange} value={formField.value}>
                                                     <SelectTrigger>
-                                                        <SelectValue placeholder={`Select a option`} />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {field.option.map((option) => (
-                                                            <SelectItem key={option} value={option}>
-                                                                {option}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+                                                                <SelectValue placeholder={`Select an option`} />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {field.option.map((option) => (
+                                                                    <SelectItem key={option} value={option}>
+                                                                        {option}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    ) : field.dataType === "Multiple Choice Question (Multiple Select)" ? (
+                                                        <div className="space-y-2">
+                                                            {field.option.map((option) => (
+                                                                <label key={option} className="flex items-center gap-2">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        value={option}
+                                                                        checked={formField.value?.includes(option)}
+                                                                        onChange={(e) => {
+                                                                            const checked = e.target.checked;
+                                                                            const valueArray = formField.value || [];
+                                                                            if (checked) {
+                                                                                formField.onChange([...valueArray, option]);
+                                                                            } else {
+                                                                                formField.onChange(valueArray.filter((val: string) => val !== option));
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                    {option}
+                                                                </label>
+                                                            ))}
+                                                        </div>
                                             ) : (
                                                 <Input
                                                     placeholder={field.label}
@@ -235,6 +265,7 @@ export default function MyForm({ formDetails }: { formDetails: FormDetailsType[]
                                                     {...formField}
                                                 />
                                             )}
+
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

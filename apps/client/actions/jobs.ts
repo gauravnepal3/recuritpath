@@ -153,10 +153,10 @@ export const submitForm = async (formData: FormData): Promise<SuccessResponse<Ca
         });
 
         const replacements = {
-            "Candidate Name": candidateApplication.formResponses.find(x => x.label === "Name")?.value,
-            "Job Title": jobData.title,
-            "Organization Name": jobData.organization.name,
-            "Company Name": jobData.organization.name,  // If you need it as a separate placeholder
+            "CandidateName": candidateApplication.formResponses.find(x => x.label === "Name")?.value,
+            "JobTitle": jobData.title,
+            "OrganizationName": jobData.organization.name,
+            "CompanyName": jobData.organization.name,  // If you need it as a separate placeholder
         };
         if (mailTemplate) {
             const parsedBody = replacePlaceholdersInBody(mailTemplate.body, replacements);

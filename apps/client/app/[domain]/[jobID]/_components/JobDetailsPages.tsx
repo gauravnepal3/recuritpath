@@ -8,6 +8,7 @@ import { cn } from '@repo/ui/lib/utils'
 import { buttonVariants } from '@repo/ui/components/button'
 import JobForm from './JobForm'
 import TipTapHTMLRenderer from './TipTapRender'
+import OrganizationNavbar from '@/components/organization-navbar'
 
 const getJobDetails = async (jobID: string) => {
     return await prisma.jobPost.findFirst({
@@ -19,7 +20,8 @@ const getJobDetails = async (jobID: string) => {
             organization: {
                 select: {
                     name: true,
-                    logo: true
+                    logo: true,
+                    url: true
                 }
             }
         }
@@ -30,9 +32,7 @@ const JobDetailsPages = async ({ jobID }: { jobID: string }) => {
     if (!jobDetails) return null
     return (
         <div className='max-w-screen-lg mx-auto'>
-            <div className="border-b py-4 ">
-                {jobDetails.organization?.name}
-            </div>
+            <OrganizationNavbar organizationName={jobDetails?.organization.name} organizationLogo={jobDetails?.organization.logo} organizationURL={jobDetails?.organization.url} />
             <div className="mt-12 grid grid-cols-6">
                 <div className="col-span-4">
                     <div className="flex items-center gap-x-1">

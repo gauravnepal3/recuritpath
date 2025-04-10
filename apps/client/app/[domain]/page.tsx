@@ -5,6 +5,7 @@ import { prisma } from '@repo/database'
 import Link from 'next/link';
 import { Badge } from '@repo/ui/components/badge';
 import { User } from 'lucide-react';
+import OrganizationNavbar from '@/components/organization-navbar';
 const getDetailsByDomain = async (domain: string) => {
     return await prisma.organization.findFirst({
         where: {
@@ -42,9 +43,7 @@ const LandingPage = async ({
     const jobDetails = organizationDetails?.jobPost.filter(x => x.isPublished)
     return (
         <div className='max-w-screen-lg mx-auto'>
-            <div className="border-b py-3">
-                {organizationDetails?.name}
-            </div>
+            <OrganizationNavbar organizationName={organizationDetails?.name} organizationLogo={organizationDetails?.logo} organizationURL={organizationDetails?.url} />
             {(!jobDetails || jobDetails?.length === 0) ?
                 <div className='text-center mt-4'>
                     <span className='text-xs text-muted-foreground pt-4'>No jobs available</span>
