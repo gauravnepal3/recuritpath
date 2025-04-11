@@ -84,7 +84,8 @@ services:
       - "traefik.http.routers.client.entrypoints=https"
       - "traefik.http.routers.client.tls=true"
       - "traefik.http.routers.client.tls.certresolver=myresolver"
-      - "traefik.http.services.client.loadbalancer.server.port=3001"
+      - "traefik.http.services.client.loadbalancer.server.port=3001" # <-- adjust based on your container's port
+
 
 
 
