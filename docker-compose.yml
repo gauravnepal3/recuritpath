@@ -12,6 +12,21 @@ networks:
     name: koo0wsoss84404kcccs0sg80
 
 services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./letsencrypt:/letsencrypt
+    networks:
+      - app_network
+      - koo0wsoss84404kcccs0sg80
+    restart: always
+
   main:
     container_name: main
     build:
@@ -79,15 +94,14 @@ services:
     depends_on:
       - migration
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.client.rule=HostRegexp(`{subdomain:.+}.battiinnovate.com`, `battiinnovate.com`)"
-      - "traefik.http.routers.client.entrypoints=https"
-      - "traefik.http.routers.client.tls=true"
-      - "traefik.http.routers.client.tls.certresolver=myresolver"
-      - "traefik.http.services.client.loadbalancer.server.port=3001" # <-- adjust based on your container's port
-
-
-
+      - traefik.enable=true
+      - traefik.http.routers.client.rule=HostRegexp(`{subdomain:.+}.battiinnovate.com`, `battiinnovate.com`)
+      - traefik.http.routers.client.entrypoints=https
+      - traefik.http.routers.client.tls=true
+      - traefik.http.routers.client.tls.certresolver=letsencrypt
+      - traefik.http.routers.client.tls.domains[0].main=battiinnovate.com
+      - traefik.http.routers.client.tls.domains[0].sans=*.battiinnovate.com
+      - traefik.http.services.client.loadbalancer.server.port=3001
 
   migration:
     container_name: migration
