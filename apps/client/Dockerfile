@@ -1,9 +1,8 @@
-FROM node:20-alpine3.16 AS base
+FROM node:20.12.2-alpine AS base
 
 # Builder stage
 FROM base AS builder
 RUN apk update && apk add --no-cache \
-    curl \
     libc6-compat \
     python3 \
     make \
@@ -21,7 +20,7 @@ RUN apk update && apk add --no-cache \
 WORKDIR /app
 RUN yarn global add turbo
 COPY . .
-RUN turbo prune client --docker
+RUN turbo prune main --docker
 
 # Installer stage
 FROM base AS installer
@@ -41,6 +40,7 @@ RUN apk update && apk add --no-cache \
     && ln -sf python3 /usr/bin/python
 
 WORKDIR /app
+# 🔧 Add curl here — this is the final image your app runs in
 RUN apk add --no-cache curl
 RUN yarn global add pnpm turbo
 
@@ -55,6 +55,7 @@ RUN pnpm install --unsafe-perm
 
 COPY --from=builder /app/out/full/ .
 # After installing packages and before `pnpm run generate`
+
 RUN pnpm run generate
 
 # Set build arguments for public environment variables
@@ -75,16 +76,13 @@ RUN pnpm turbo build
 # Runner stage
 FROM base AS runner
 WORKDIR /app
-# 🔧 Add curl here — this is the final image your app runs in
 RUN apk add --no-cache curl
+
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy entrypoint
-COPY ./apps/client/entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
 USER nextjs
 
 COPY --from=installer --chown=nextjs:nodejs /app/apps/client/.next/standalone ./
@@ -98,3 +96,5 @@ ENV PORT=3001
 # Run entrypoint script
 ENV HOSTNAME="0.0.0.0"
 CMD node apps/client/server.js
+
+
