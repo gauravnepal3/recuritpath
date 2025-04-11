@@ -20,7 +20,7 @@ RUN apk update && apk add --no-cache \
 WORKDIR /app
 RUN yarn global add turbo
 COPY . .
-RUN turbo prune main --docker
+RUN turbo prune client --docker
 
 # Installer stage
 FROM base AS installer
