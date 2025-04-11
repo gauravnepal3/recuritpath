@@ -80,10 +80,9 @@ services:
       - migration
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.client.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.battiinnovate.com`)"
+      - "traefik.http.routers.https-0-koo0wsoss84404kcccs0sg80.rule=(Host(`battiinnovate.com`) && PathPrefix(`/`)) || HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.battiinnovate.com`)"
       - "traefik.http.routers.client.entrypoints=http"
       - "traefik.http.services.client.loadbalancer.server.port=3001"
-      - "traefik.http.routers.https-0-koo0wsoss84404kcccs0sg80.rule=Host(battiinnovate.com) && PathPrefix(/) || HostRegexp({subdomain:[a-zA-Z0-9-]+}.battiinnovate.com)"
 
   migration:
     container_name: migration
