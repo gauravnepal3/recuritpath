@@ -1,43 +1,21 @@
-version: "3.8"
+version: "3"
 
 volumes:
   database:
     driver: local
 
-networks:
-  app_network:
-    driver: bridge
-  koo0wsoss84404kcccs0sg80:
-    external: true
-    name: koo0wsoss84404kcccs0sg80
-
 services:
-  traefik:
-    image: traefik:v2.10
-    container_name: traefik
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./letsencrypt:/letsencrypt
-    networks:
-      - app_network
-      - koo0wsoss84404kcccs0sg80
-    restart: always
-
   main:
     container_name: main
     build:
-      context: .
-      dockerfile: ./apps/main/Dockerfile
       args:
         NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
         NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
         NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
         NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
+      context: .
+      dockerfile: ./apps/main/Dockerfile
     restart: always
     ports:
       - 3000:3000
@@ -45,73 +23,56 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     environment:
-      NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
-      NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
-      NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+      - NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+      - NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL}
     networks:
       - app_network
-      - koo0wsoss84404kcccs0sg80
     depends_on:
-      - migration
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.main.rule=Host(`app.requro.com`)
-      - traefik.http.routers.main.entrypoints=https
-      - traefik.http.routers.main.tls=true
-      - traefik.http.routers.main.tls.certresolver=letsencrypt
-      - traefik.http.services.main.loadbalancer.server.port=3000
+      - migration  # Ensures migrations run before the main service
 
   client:
     container_name: client
     build:
-      context: .
-      dockerfile: ./apps/client/Dockerfile
       args:
         NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
         NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
         NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
         NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
+      context: .
+      dockerfile: ./apps/client/Dockerfile
     restart: always
     ports:
       - 3001:3001
+    environment:
+      - NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+      - NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL}
     dns:
       - 8.8.8.8
       - 1.1.1.1
-    environment:
-      NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
-      NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
-      NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
     networks:
       - app_network
-      - koo0wsoss84404kcccs0sg80
     depends_on:
-      - migration
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.client.rule=HostRegexp(`{subdomain:.+}.battiinnovate.com`, `battiinnovate.com`)
-      - traefik.http.routers.client.entrypoints=https
-      - traefik.http.routers.client.tls=true
-      - traefik.http.routers.client.tls.certresolver=letsencrypt
-      - traefik.http.routers.client.tls.domains[0].main=battiinnovate.com
-      - traefik.http.routers.client.tls.domains[0].sans=*.battiinnovate.com
-      - traefik.http.services.client.loadbalancer.server.port=3001
+      - migration  # Ensures migrations run before the client service
 
   migration:
     container_name: migration
     build:
       context: .
-      dockerfile: ./Dockerfile.migrate
+      dockerfile: ./Dockerfile.migrate  # Points to the migration Dockerfile
     environment:
-      NODE_ENV: production
+      - NODE_ENV=production  # Set this as needed
     networks:
       - app_network
-      - koo0wsoss84404kcccs0sg80
-    command: ["pnpm", "run", "db:migrate:deploy"]
-    restart: unless-stopped
+    command: ["pnpm", "run", "db:migrate:deploy"]  # This will run the Prisma migrations on container startup
+
+networks:
+  app_network:
+    driver: bridge
+
