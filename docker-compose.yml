@@ -56,6 +56,50 @@ services:
     dns:
       - 8.8.8.8
       - 1.1.1.1
+    labels:
+      - coolify.managed=true
+      - coolify.version=4.0.0-beta.407
+      - coolify.applicationId=1
+      - coolify.type=application
+      - coolify.name=client-koo0wsoss84404kcccs0sg80-081450594581
+      - coolify.resourceName=requro-monorepo
+      - coolify.projectName=my-first-project
+      - coolify.serviceName=requro-monorepo
+      - coolify.environmentName=production
+      - coolify.pullRequestId=0
+      - traefik.enable=true
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.routers.http-0-koo0wsoss84404kcccs0sg80-client.entryPoints=http
+      - traefik.http.routers.http-0-koo0wsoss84404kcccs0sg80-client.middlewares=redirect-to-https
+      - 'traefik.http.routers.http-0-koo0wsoss84404kcccs0sg80-client.rule=Host(`battiinnovate.com`) && PathPrefix(`/`)'
+      - traefik.http.routers.http-1-koo0wsoss84404kcccs0sg80-client.entryPoints=http
+      - traefik.http.routers.http-1-koo0wsoss84404kcccs0sg80-client.middlewares=gzip
+      - 'traefik.http.routers.http-1-koo0wsoss84404kcccs0sg80-client.rule=HostRegexp(`{subdomain:.+}.battiinnovate.com`)'
+      - traefik.http.routers.https-0-koo0wsoss84404kcccs0sg80-client.entryPoints=https
+      - traefik.http.routers.https-0-koo0wsoss84404kcccs0sg80-client.middlewares=gzip
+      - 'traefik.http.routers.https-0-koo0wsoss84404kcccs0sg80-client.rule=Host(`battiinnovate.com`) && PathPrefix(`/`)'
+      - traefik.http.routers.https-1-koo0wsoss84404kcccs0sg80-client.entryPoints=https
+      - traefik.http.routers.https-1-koo0wsoss84404kcccs0sg80-client.middlewares=gzip
+      - 'traefik.http.routers.https-1-koo0wsoss84404kcccs0sg80-client.rule=HostRegexp(`{subdomain:.+}.battiinnovate.com`)'
+      - traefik.http.routers.https-0-koo0wsoss84404kcccs0sg80-client.tls.certresolver=letsencrypt
+      - traefik.http.routers.https-0-koo0wsoss84404kcccs0sg80-client.tls=true
+      - traefik.http.routers.https-1-koo0wsoss84404kcccs0sg80-client.tls.certresolver=letsencrypt
+      - traefik.http.routers.https-1-koo0wsoss84404kcccs0sg80-client.tls=true
+      # Remove incorrect Caddy labels or update them
+      - 'caddy_0.encode=zstd gzip'
+      - 'caddy_0.handle_path.0_reverse_proxy={{upstreams}}'
+      - 'caddy_0.handle_path=/*'
+      - caddy_0.header=-Server
+      - 'caddy_0.try_files={path} /index.html /index.php'
+      - 'caddy_0=https://battiinnovate.com'
+      - 'caddy_1.encode=zstd gzip'
+      - 'caddy_1.handle_path.0_reverse_proxy={{upstreams}}'
+      - 'caddy_1.handle_path=/*'
+      - caddy_1.header=-Server
+      - 'caddy_1.try_files={path} /index.html /index.php'
+      - 'caddy_1=https://*.battiinnovate.com'
+      - caddy_ingress_network=koo0wsoss84404kcccs0sg80
     networks:
       - app_network
     depends_on:
