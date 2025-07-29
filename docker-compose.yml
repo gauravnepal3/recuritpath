@@ -31,7 +31,7 @@ services:
     networks:
       - app_network
     depends_on:
-      - migration  # Ensures migrations run before the main service
+      - migration
 
   client:
     container_name: client
@@ -57,50 +57,52 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     labels:
-        - traefik.enable=true
-        - traefik.http.middlewares.gzip.compress=true
-        - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.enable=true
 
-        # Main domain
-        - traefik.http.routers.client-main.entrypoints=http
-        - traefik.http.routers.client-main.rule=Host(`battiinnovate.com`)
-        - traefik.http.routers.client-main.middlewares=redirect-to-https
+      # HTTP redirect to HTTPS
+      - traefik.http.routers.client-main-http.rule=Host(`requro.com`)
+      - traefik.http.routers.client-main-http.entrypoints=http
+      - traefik.http.routers.client-main-http.middlewares=redirect-to-https
 
-        # Wildcard subdomains (simplified regex)
-        - traefik.http.routers.client-wildcard.entrypoints=http
-        - traefik.http.routers.client-wildcard.rule=HostRegexp(`{subdomain:.+}.battiinnovate.com`)
-        - traefik.http.routers.client-wildcard.middlewares=redirect-to-https
+      - traefik.http.routers.client-wildcard-http.rule=HostRegexp(`^.+\\.requro\\.com$`)
+      - traefik.http.routers.client-wildcard-http.entrypoints=http
+      - traefik.http.routers.client-wildcard-http.middlewares=redirect-to-https
 
-        # HTTPS versions
-        - traefik.http.routers.client-main-https.entrypoints=https
-        - traefik.http.routers.client-main-https.rule=Host(`battiinnovate.com`)
-        - traefik.http.routers.client-main-https.tls=true
-        - traefik.http.routers.client-main-https.tls.certresolver=letsencrypt
+      # HTTPS routers
+      - traefik.http.routers.client-main-https.rule=Host(`requro.com`)
+      - traefik.http.routers.client-main-https.entrypoints=https
+      - traefik.http.routers.client-main-https.tls=true
+      - traefik.http.routers.client-main-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.client-main-https.middlewares=gzip
 
-        - traefik.http.routers.client-wildcard-https.entrypoints=https
-        - traefik.http.routers.client-wildcard-https.rule=HostRegexp(`{subdomain:.+}.battiinnovate.com`)
-        - traefik.http.routers.client-wildcard-https.tls=true
-        - traefik.http.routers.client-wildcard-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.client-wildcard-https.rule=HostRegexp(`^.+\\.requro\\.com$`)
+      - traefik.http.routers.client-wildcard-https.entrypoints=https
+      - traefik.http.routers.client-wildcard-https.tls=true
+      - traefik.http.routers.client-wildcard-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.client-wildcard-https.middlewares=gzip
 
-        # Essential service definition
-        - traefik.http.services.client.loadbalancer.server.port=3001
+      # Middlewares
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+
+      # Service Definition
+      - traefik.http.services.client.loadbalancer.server.port=3001
     networks:
       - app_network
     depends_on:
-      - migration  # Ensures migrations run before the client service
+      - migration
 
   migration:
     container_name: migration
     build:
       context: .
-      dockerfile: ./Dockerfile.migrate  # Points to the migration Dockerfile
+      dockerfile: ./Dockerfile.migrate
     environment:
-      - NODE_ENV=production  # Set this as needed
+      - NODE_ENV=production
     networks:
       - app_network
-    command: ["pnpm", "run", "db:migrate:deploy"]  # This will run the Prisma migrations on container startup
+    command: ["pnpm", "run", "db:migrate:deploy"]
 
 networks:
   app_network:
     driver: bridge
-
