@@ -24,7 +24,7 @@ services:
       - 1.1.1.1
     labels:
       - traefik.enable=true
-      - traefik.docker.network=docker_external
+      - traefik.docker.network=app_network
     environment:
       - NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
       - NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
@@ -61,7 +61,7 @@ services:
       - 1.1.1.1
     labels:
       - traefik.enable=true
-      - traefik.docker.network=docker_external
+      - traefik.docker.network=app_network
       - traefik.http.routers.client-router-https.rule=HostRegexp(`^.+\.requro\.com$`)
       - traefik.http.routers.client-router-https.priority=0
       - traefik.http.routers.client-router-https.entryPoints=https
