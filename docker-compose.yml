@@ -19,12 +19,9 @@ services:
     restart: always
     ports:
       - 3000:3000
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     labels:
       - traefik.enable=true
-      - traefik.docker.network=app_network
+      - traefik.docker.network=coolify
     environment:
       - NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
       - NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
@@ -32,7 +29,7 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL}
     networks:
-      - app_network
+      - coolify
     depends_on:
       - migration
 
@@ -56,12 +53,9 @@ services:
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL}
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     labels:
       - traefik.enable=true
-      - traefik.docker.network=app_network
+      - traefik.docker.network=coolify
       - traefik.http.routers.client-router-https.rule=HostRegexp(`^.+\.requro\.com$`)
       - traefik.http.routers.client-router-https.priority=0
       - traefik.http.routers.client-router-https.entryPoints=https
@@ -91,10 +85,10 @@ services:
       - caddy_0.header=-Server
       - caddy_0.try_files={path} /index.html /index.php
       - caddy_0=://
-      - caddy_ingress_network=app_network
+      - caddy_ingress_network=coolify
 
     networks:
-      - app_network
+      - coolify
     depends_on:
       - migration
 
@@ -106,10 +100,10 @@ services:
     environment:
       - NODE_ENV=production
     networks:
-      - app_network
+      - coolify
     command: ["pnpm", "run", "db:migrate:deploy"]
 
 networks:
-  app_network:
-    name: app_network
-    driver: bridge
+  coolify:
+    name: coolify
+    external: true
