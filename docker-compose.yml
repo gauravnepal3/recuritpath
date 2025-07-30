@@ -22,6 +22,9 @@ services:
     dns:
       - 8.8.8.8
       - 1.1.1.1
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=docker_external
     environment:
       - NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
       - NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
@@ -58,6 +61,7 @@ services:
       - 1.1.1.1
     labels:
       - traefik.enable=true
+      - traefik.docker.network=docker_external
       - traefik.http.routers.client-router-https.rule=HostRegexp(`^.+\.requro\.com$`)
       - traefik.http.routers.client-router-https.priority=0
       - traefik.http.routers.client-router-https.entryPoints=https
@@ -107,4 +111,5 @@ services:
 
 networks:
   app_network:
+    name: app_network
     driver: bridge
