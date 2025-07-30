@@ -58,35 +58,37 @@ services:
       - 1.1.1.1
     labels:
       - traefik.enable=true
+      - traefik.http.routers.client-router-https.rule=HostRegexp(`^.+\.requro\.com$`)
+      - traefik.http.routers.client-router-https.priority=0
+      - traefik.http.routers.client-router-https.entryPoints=https
+      - traefik.http.routers.client-router-https.tls=true
+      - traefik.http.routers.client-router-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.client-router-https.middlewares=gzip
+      - traefik.http.routers.client-router-https.service=client-service
 
-      # HTTP redirect to HTTPS
-      - traefik.http.routers.client-main-http.rule=Host(`requro.com`)
-      - traefik.http.routers.client-main-http.entrypoints=http
-      - traefik.http.routers.client-main-http.middlewares=redirect-to-https
+       # HTTP Router (for redirecting to HTTPS)
+      - traefik.http.routers.client-router-http.rule=HostRegexp(`^.+\.requro\.com$`)
+      - traefik.http.routers.client-router-http.priority=0
+      - traefik.http.routers.client-router-http.entryPoints=http
+      - traefik.http.routers.client-router-http.middlewares=redirect-to-https
 
-      - traefik.http.routers.client-wildcard-http.rule=HostRegexp(`^.+\\.requro\\.com$`)
-      - traefik.http.routers.client-wildcard-http.entrypoints=http
-      - traefik.http.routers.client-wildcard-http.middlewares=redirect-to-https
-
-      # HTTPS routers
-      - traefik.http.routers.client-main-https.rule=Host(`requro.com`)
-      - traefik.http.routers.client-main-https.entrypoints=https
-      - traefik.http.routers.client-main-https.tls=true
-      - traefik.http.routers.client-main-https.tls.certresolver=letsencrypt
-      - traefik.http.routers.client-main-https.middlewares=gzip
-
-      - traefik.http.routers.client-wildcard-https.rule=HostRegexp(`^.+\\.requro\\.com$`)
-      - traefik.http.routers.client-wildcard-https.entrypoints=https
-      - traefik.http.routers.client-wildcard-https.tls=true
-      - traefik.http.routers.client-wildcard-https.tls.certresolver=letsencrypt
-      - traefik.http.routers.client-wildcard-https.middlewares=gzip
-
-      # Middlewares
+       # Define HTTPS Middleware (Compression)
       - traefik.http.middlewares.gzip.compress=true
+
+       # Define HTTP to HTTPS Redirection Middleware
       - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
 
       # Service Definition
-      - traefik.http.services.client.loadbalancer.server.port=3001
+      - traefik.http.services.client-service.loadbalancer.server.port=3001
+
+      - caddy_0.encode=zstd gzip
+      - caddy_0.handle_path.0_reverse_proxy={{upstreams 3001}}
+      - caddy_0.handle_path=*
+      - caddy_0.header=-Server
+      - caddy_0.try_files={path} /index.html /index.php
+      - caddy_0=://
+      - caddy_ingress_network=app_network
+
     networks:
       - app_network
     depends_on:
