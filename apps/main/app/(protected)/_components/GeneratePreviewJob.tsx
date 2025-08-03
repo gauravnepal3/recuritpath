@@ -6,6 +6,11 @@ import React from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 const GeneratePreviewJob = ({ organizationID, jobID }: { organizationID: string, jobID: string }) => {
+    const isDev = process.env.NODE_ENV === 'development';
+    const baseUrl = isDev
+        ? `${process.env.NEXT_PUBLIC_CLIENT_URL}` // e.g., localhost:3000
+        : `https://preview.${process.env.NEXT_PUBLIC_CLIENT_URL}`; // e.g., preview.requro.com
+
     return (
         <Button variant={'link'} onClick={async () => {
             try {
@@ -16,7 +21,7 @@ const GeneratePreviewJob = ({ organizationID, jobID }: { organizationID: string,
                         if (response.type === "ERROR") {
                             throw new Error(response.message); // Throw error to trigger the `error` toast
                         }
-                        window.open(`${process.env.NEXT_PUBLIC_CLIENT_URL}/preview?preview=${response.data?.id}`)
+                        window.open(`${baseUrl}/preview?preview=${response.data?.id}`)
                         return response.message; // Success case, pass the message for the `success` toast
                     }),
                     {

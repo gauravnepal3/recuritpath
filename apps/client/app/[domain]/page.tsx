@@ -7,7 +7,13 @@ import { Badge } from '@repo/ui/components/badge';
 import { User } from 'lucide-react';
 import OrganizationNavbar from '@/components/organization-navbar';
 const getDetailsByDomain = async (domain: string) => {
-    const assignedDomain = domain.split(`.${process.env.NEXT_PUBLIC_CLIENT_URL}`)[0];
+    const rootDomain = process.env.NEXT_PUBLIC_CLIENT_URL ?? "localhost:3000" // fallback for dev
+    let assignedDomain: string | null = null
+
+    if (domain.endsWith(`.${rootDomain}`)) {
+        assignedDomain = domain.replace(`.${rootDomain}`, '');
+    }
+
     console.log("Requested Domain:", domain);
     console.log("Assigned Domain:", assignedDomain);
     console.log("Custom Domain:", domain);
