@@ -7,28 +7,36 @@ import { Badge } from '@repo/ui/components/badge';
 import { User } from 'lucide-react';
 import OrganizationNavbar from '@/components/organization-navbar';
 const getDetailsByDomain = async (domain: string) => {
-    const rootDomain = process.env.NEXT_PUBLIC_CLIENT_URL ?? "localhost:3000" // fallback for dev
-    let assignedDomain: string | null = null
+    const rootDomain = process.env.NEXT_PUBLIC_CLIENT_URL?.replace(/^https?:\/\//, '') ?? "localhost:3000";
+
+    let assignedDomain: string | null = null;
 
     if (domain.endsWith(`.${rootDomain}`)) {
-        assignedDomain = domain.replace(`.${rootDomain}`, '');
-    }
+      assignedDomain = domain.slice(0, -(rootDomain.length + 1)); // +1 for the dot
+  }
 
     console.log("Requested Domain:", domain);
+    console.log("Root Domain:", rootDomain);
     console.log("Assigned Domain:", assignedDomain);
     console.log("Custom Domain:", domain);
+
+    const orConditions: { assignedDomain?: string; customDomain?: string }[] = [];
+
+    if (assignedDomain) {
+        orConditions.push({ assignedDomain });
+    }
+
+    orConditions.push({ customDomain: domain });
+
     return await prisma.organization.findFirst({
         where: {
-            OR: [
-                { assignedDomain },
-                { customDomain: domain }
-            ],
-        },
-        include: {
-            jobPost: true
-        }
-    });
-}
+          OR: orConditions
+      },
+      include: {
+          jobPost: true
+      }
+  });
+};
 
 const LandingPage = async ({
     params,
