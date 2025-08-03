@@ -9,7 +9,7 @@ const GeneratePreviewJob = ({ organizationID, jobID }: { organizationID: string,
     const isDev = process.env.NODE_ENV === 'development';
     const baseUrl = isDev
         ? `${process.env.NEXT_PUBLIC_CLIENT_URL}` // e.g., localhost:3000
-        : `https://preview.${process.env.NEXT_PUBLIC_CLIENT_URL}`; // e.g., preview.requro.com
+        : `https://preview.${process.env.NEXT_PUBLIC_CLIENT_URL?.split('https://')[1]}`; // e.g., preview.requro.com
 
     return (
         <Button variant={'link'} onClick={async () => {
