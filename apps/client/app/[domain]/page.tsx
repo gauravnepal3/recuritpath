@@ -7,23 +7,23 @@ import { Badge } from '@repo/ui/components/badge';
 import { User } from 'lucide-react';
 import OrganizationNavbar from '@/components/organization-navbar';
 const getDetailsByDomain = async (domain: string) => {
+    const assignedDomain = domain.split(`.${process.env.NEXT_PUBLIC_CLIENT_URL}`)[0];
+    console.log("Requested Domain:", domain);
+    console.log("Assigned Domain:", assignedDomain);
+    console.log("Custom Domain:", domain);
     return await prisma.organization.findFirst({
         where: {
             OR: [
-                {
-                    assignedDomain: domain.split(`.${process.env.NEXT_PUBLIC_CLIENT_URL}`)[0],
-                },
-                {
-                    customDomain: domain
-                }
+                { assignedDomain },
+                { customDomain: domain }
             ],
-
         },
         include: {
             jobPost: true
         }
-    })
+    });
 }
+
 const LandingPage = async ({
     params,
     searchParams,
