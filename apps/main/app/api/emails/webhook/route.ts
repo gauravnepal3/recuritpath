@@ -3,7 +3,12 @@ import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { simpleParser } from "mailparser";
 import { prisma } from "@repo/database";
 
-const s3 = new S3Client({ region: process.env.AWS_REGION });
+// NOTE: inbound mail is written into this bucket by an SES receipt rule, which
+// cannot write to R2. This route only works while that bucket is still on AWS.
+const s3 = new S3Client({
+    region: process.env.AWS_REGION || "us-east-1",
+    ...(process.env.INBOUND_S3_ENDPOINT ? { endpoint: process.env.INBOUND_S3_ENDPOINT, forcePathStyle: true } : {}),
+});
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 const S3_BUCKET_NAME = process.env.AWS_EMAIL_S3_BUCKET_NAME; // Store in .env
 
