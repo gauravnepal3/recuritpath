@@ -13,7 +13,14 @@ COPY . .
 RUN turbo prune @repo/database --docker
 
 FROM base AS runner
-RUN apk add --no-cache libc6-compat openssl
+# Same native-module toolchain as the app images: the workspace install pulls
+# canvas, which builds from source.
+RUN apk add --no-cache \
+    libc6-compat openssl \
+    python3 make g++ pkgconfig \
+    cairo-dev pango-dev giflib-dev librsvg-dev pixman-dev \
+    && ln -sf python3 /usr/bin/python
+ENV PYTHON=/usr/bin/python3
 
 COPY --from=pruner /app/out/json/ .
 RUN --mount=type=cache,target=/pnpm-store \

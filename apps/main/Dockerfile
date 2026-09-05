@@ -20,7 +20,15 @@ RUN turbo prune main --docker
 # Installer — deps, codegen, build.
 # ---------------------------------------------------------------------------
 FROM base AS installer
-RUN apk add --no-cache libc6-compat openssl
+# canvas builds from source (node-gyp) and needs a full toolchain plus the
+# cairo/pango headers. Installer stage only — none of this reaches the runtime
+# image, which is a separate stage.
+RUN apk add --no-cache \
+    libc6-compat openssl \
+    python3 make g++ pkgconfig \
+    cairo-dev pango-dev giflib-dev librsvg-dev pixman-dev \
+    && ln -sf python3 /usr/bin/python
+ENV PYTHON=/usr/bin/python3
 
 COPY --from=pruner /app/out/json/ .
 RUN --mount=type=cache,target=/pnpm-store \
