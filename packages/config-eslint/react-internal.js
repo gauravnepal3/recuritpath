@@ -1,12 +1,12 @@
 import globals from "globals";
-import pluginNext from "@next/eslint-plugin-next";
 import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 
 import { config as baseConfig } from "./base.js";
 
+/** Flat config for the shared component library. */
 /** @type {import("eslint").Linter.Config[]} */
-export const nextJsConfig = [
+export const config = [
   ...baseConfig,
   {
     ...pluginReact.configs.flat.recommended,
@@ -16,23 +16,14 @@ export const nextJsConfig = [
     },
   },
   {
-    plugins: { "@next/next": pluginNext },
-    rules: {
-      ...pluginNext.configs.recommended.rules,
-      ...pluginNext.configs["core-web-vitals"].rules,
-    },
-  },
-  {
     plugins: { "react-hooks": pluginReactHooks },
     settings: { react: { version: "detect" } },
     rules: {
       ...pluginReactHooks.configs.recommended.rules,
-      // The new JSX transform makes the React import unnecessary.
       "react/react-in-jsx-scope": "off",
       "react/prop-types": "off",
-      "react/no-unescaped-entities": "off",
     },
   },
 ];
 
-export default nextJsConfig;
+export default config;

@@ -5,7 +5,7 @@ import { Lock } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import React from 'react'
 import { Payment, prisma } from '@repo/database'
-import { cookies } from 'next/headers';
+import { requireOrganizationAdmin } from '@/lib/organization';
 import { Button } from '@repo/ui/components/button';
 import Link from 'next/link';
 import { TransactionTable } from './_components/TransactionTable';
@@ -29,14 +29,10 @@ const getTransactionDetails = async (organizationId: string): Promise<Payment[]>
 }
 const Account = async () => {
     const user = await currentUser();
-    const cookiesProvider = await cookies()
-    const organizationId = cookiesProvider.get('organization')?.value
-    if (!organizationId) {
-        redirect('/')
-    }
     if (!user) {
         redirect('/auth/login')
     }
+    const { organizationId } = await requireOrganizationAdmin()
     const organizationSubscription = await getOrganizationSubscription(organizationId, user.id)
     const transitionDetails = await getTransactionDetails(organizationId)
     return (

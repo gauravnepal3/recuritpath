@@ -1,7 +1,7 @@
 
-import { cookies } from 'next/headers'
 import { prisma } from '@repo/database'
 import { currentUser } from "@/lib/auth";
+import { candidateAccessScope } from "@/lib/organization";
 import { redirect } from "next/navigation";
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -15,17 +15,11 @@ interface ProtectedLayoutProps {
     params: Promise<{ slug: string, stageId: string, candidateId: string }>
 };
 
-const getApplicantData = async (candidateID: string) => {
+const getApplicantData = async (candidateID: string, userID: string) => {
     return await prisma.candidateApplication.findFirst({
         where: {
             id: candidateID,
-            jobPost: {
-                jobStage: {
-                    some: {
-                        isDeleted: false
-                    }
-                }
-            }
+            ...candidateAccessScope(userID),
         },
         select: {
             id: true,
@@ -47,19 +41,14 @@ const getApplicantData = async (candidateID: string) => {
     })
 }
 const StageLayout = async ({ children, params }: ProtectedLayoutProps) => {
-    const cookieStore = await cookies()
-    const organization = cookieStore.get('organization')
-    if (!organization) {
-        redirect('/organization/manage')
-    }
     const user = await currentUser()
-    if (!user) {
-        return
+    if (!user?.id) {
+        redirect('/auth/login')
     }
     const stageID = (await params).stageId
     const candidateID = (await params).candidateId
     const jobID = (await params).slug
-    const applicantData = await getApplicantData(candidateID)
+    const applicantData = await getApplicantData(candidateID, user.id)
     return (
         <div className="relative">
             <div className="flex z-10">

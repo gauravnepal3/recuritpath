@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  verify:
+    name: Typecheck, lint and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Prisma client must exist before anything type-checks.
+      - run: pnpm run generate
+
+      - name: Typecheck
+        run: pnpm turbo run typecheck
+
+      - name: Lint
+        run: pnpm turbo run lint
+
+      # Placeholder values only — the build must not depend on real secrets.
+      # NEXT_PUBLIC_* are inlined at build time, so they have to be set.
+      - name: Build
+        run: pnpm turbo run build
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/ci?schema=public
+          AUTH_SECRET: ci-placeholder-secret-not-used-at-build-time
+          AUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEXT_PUBLIC_CLIENT_URL: http://localhost:3001
+          NEXT_PUBLIC_PADDLE_ENV: sandbox
+          NEXT_PUBLIC_PADDLE_CLIENT_KEY: ci-placeholder
+          NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ci-placeholder
+          S3_IMAGE_HOSTNAME: example.s3.amazonaws.com
+
+  migrations:
+    name: Migrations apply cleanly
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: recruit
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Catches a migration that fails on a clean database, and any drift
+      # between the migration history and schema.prisma.
+      - name: prisma migrate deploy
+        run: pnpm --filter @repo/database run db:migrate:deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/recruit?schema=public
+
+      - name: Check schema matches migrations
+        run: pnpm exec prisma migrate diff
+          --from-migrations packages/database/prisma/migrations
+          --to-schema-datamodel packages/database/prisma/schema.prisma
+          --shadow-database-url postgresql://postgres:postgres@localhost:5432/recruit_shadow
+          --exit-code
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/recruit?schema=public
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [main, client]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build ${{ matrix.app }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/${{ matrix.app }}/Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_PUBLIC_APP_URL=http://localhost:3000
+            NEXT_PUBLIC_CLIENT_URL=http://localhost:3001
+            NEXT_PUBLIC_PADDLE_ENV=sandbox
+            NEXT_PUBLIC_PADDLE_CLIENT_KEY=ci-placeholder
+            NEXT_PUBLIC_RECAPTCHA_SITE_KEY=ci-placeholder
+            S3_IMAGE_HOSTNAME=example.s3.amazonaws.com

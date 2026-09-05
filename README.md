@@ -1,110 +1,103 @@
-# Turborepo starter
+# Requro
 
-This is a community-maintained example. If you experience a problem, please submit a pull request with a fix. GitHub Issues will be closed.
+Recruitment platform. Turborepo monorepo with two Next.js 16 apps over a shared
+Postgres database.
 
-## Using this example
+| Workspace | Port | Purpose |
+| --- | --- | --- |
+| `apps/main` | 3000 | Recruiter dashboard — auth, jobs, candidates, billing, email |
+| `apps/client` | 3001 | Public job boards, one per tenant subdomain |
+| `packages/database` | — | Prisma schema, migrations, generated client |
+| `packages/ui` | — | Shared component library |
+| `packages/config-eslint` | — | Shared flat ESLint config |
+| `packages/config-typescript` | — | Shared tsconfig bases |
 
-Run the following command:
-
-```sh
-npx create-turbo@latest -e with-prisma
-```
-
-## What's inside?
-
-This turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `web`: a [Next.js](https://nextjs.org/) app
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/database`: [Prisma](https://prisma.io/) ORM wrapper to manage & access your database
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-- [Prisma](https://prisma.io/) for database ORM
-- [Docker Compose](https://docs.docker.com/compose/) for local database
-
-### Database
-
-We use [Prisma](https://prisma.io/) to manage & access our database. As such you will need a database for this project, either locally or hosted in the cloud.
-
-To make this process easier, we offer a [`docker-compose.yml`](https://docs.docker.com/compose/) file to deploy a MySQL server locally with a new database named `turborepo` (To change this update the `MYSQL_DATABASE` environment variable in the `docker-compose.yml` file):
+## Local development
 
 ```bash
-cd my-turborepo
-docker-compose up -d
+pnpm install
+cp .env.example .env          # then fill it in
+pnpm run generate             # generate the Prisma client
+pnpm --filter @repo/database run db:migrate:deploy
+pnpm run dev
 ```
 
-Once deployed you will need to copy the `.env.example` file to `.env` in order for Prisma to have a `DATABASE_URL` environment variable to access.
+The dashboard is at `http://localhost:3000`. The public site resolves tenants by
+hostname, so use `http://<subdomain>.localhost:3001`.
+
+## Checks
 
 ```bash
-cp .env.example .env
+pnpm turbo run typecheck   # tsc --noEmit across every workspace
+pnpm turbo run lint        # ESLint 9 flat config
+pnpm turbo run build       # production build of both apps
 ```
 
-If you added a custom database name, or use a cloud based database, you will need to update the `DATABASE_URL` in your `.env` accordingly.
+CI runs all three plus a migration apply against a clean Postgres and a build of
+both Docker images. See `.github/workflows/ci.yml`.
 
-Once deployed & up & running, you will need to create & deploy migrations to your database to add the necessary tables. This can be done using [Prisma Migrate](https://www.prisma.io/migrate):
+## Configuration
+
+Every setting is an environment variable; `.env.example` is the complete list.
+
+Two things are easy to get wrong:
+
+- **`NEXT_PUBLIC_*` are inlined at build time.** They must be correct when the
+  image is built, not just when it runs. They are passed as `build.args` in
+  `docker-compose.yml`.
+- **No `.env` file may enter the Docker build context.** `next build` with
+  `output: 'standalone'` copies any `.env` it finds into `.next/standalone`,
+  which lands in the runtime image. `.dockerignore` excludes them; do not
+  loosen it. Supply secrets through the orchestrator instead.
+
+## Deployment
+
+Coolify + Traefik. `docker-compose.yml` defines three services:
+
+- `migration` — runs `prisma migrate deploy` once and exits
+- `main` — dashboard, routed on `APP_HOSTNAME`
+- `client` — public sites, routed on `*.CLIENT_DOMAIN`
+
+Both apps wait for `migration` to complete successfully before starting, so a
+failed migration blocks the rollout rather than half-applying it.
 
 ```bash
-npx prisma migrate dev
+docker compose build
+docker compose up -d
 ```
 
-If you need to push any existing migrations to the database, you can use either the Prisma db push or the Prisma migrate deploy command(s):
+### Infrastructure this expects
 
-```bash
-yarn run db:push
+- **Postgres**, with automated backups and PITR. Set `connection_limit` in
+  `DATABASE_URL` so replicas don't exhaust `max_connections`.
+- **DNS**: an `A` record for `APP_HOSTNAME` and a wildcard `*.CLIENT_DOMAIN`,
+  both pointing at the Traefik host. The wildcard certificate requires a DNS-01
+  challenge — configure the `letsencrypt` resolver accordingly.
+- **S3**: a private bucket for résumés/uploads, and a second bucket the SES
+  receipt rule writes inbound mail into under `mail/`. The upload bucket needs
+  CORS allowing `PUT` from `CLIENT_DOMAIN`.
+- **SES** in production mode (not sandbox), with `MAIL_FROM_ADDRESS` verified
+  and SPF, DKIM and DMARC published for its domain.
+- **IAM**: one principal scoped to those two buckets and SES. Rotate the keys
+  on a schedule.
+- **Paddle**: production API key and webhook secret, webhook pointed at
+  `https://APP_HOSTNAME/api/paddle/webhook`, and production price IDs in
+  `apps/main/constants/price-tier.tsx` — sandbox IDs will not work live.
 
-# OR
+### Inbound email
 
-yarn run db:migrate:deploy
-```
+SES receipt rule → S3 (`mail/{messageId}`) → `POST /api/emails/webhook` with
+`Authorization: Bearer $WEBHOOK_SECRET`.
 
-There is slight difference between the two commands & [Prisma offers a breakdown on which command is best to use](https://www.prisma.io/docs/concepts/components/prisma-migrate/db-push#choosing-db-push-or-prisma-migrate).
+## Authorization model
 
-An optional additional step is to seed some initial or fake data to your database using [Prisma's seeding functionality](https://www.prisma.io/docs/guides/database/seed-database).
+A user belongs to organizations through `OrganizationUserRole`. The active
+organization lives in two cookies, both set server-side only after membership is
+verified: `organizationRole` (a signed JWT) and `organization`.
 
-To do this update check the seed script located in `packages/database/src/seed.ts` & add or update any users you wish to seed to the database.
-
-Once edited run the following command to run tell Prisma to run the seed script defined in the Prisma configuration:
-
-```bash
-yarn run db:seed
-```
-
-For further more information on migrations, seeding & more, we recommend reading through the [Prisma Documentation](https://www.prisma.io/docs/).
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```bash
-yarn run build
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```bash
-yarn run dev
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+Read the active organization through `lib/organization.ts` — never from the
+cookie directly. `requireActiveOrganization()` re-checks membership against the
+database on every call, so revoking a member takes effect immediately rather
+than at token expiry. Candidate queries must additionally spread
+`candidateAccessScope(userId)` into their `where`; candidate ids appear in URLs
+and email metadata, so an unscoped `where: { id }` is cross-tenant read access.

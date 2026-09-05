@@ -1,96 +1,169 @@
-version: "3"
+# Production stack for Coolify + Traefik.
+#
+# Every value below comes from the environment — nothing secret is committed and
+# nothing is baked into an image. See .env.example for the full list.
+#
+# NEXT_PUBLIC_* appear twice on purpose: once under `build.args` because Next
+# inlines them into the client bundle at build time, and once under
+# `environment` for server-side reads.
 
 volumes:
   database:
     driver: local
 
+x-public-build-args: &public-build-args
+  NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY:?set NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+  NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV:?set NEXT_PUBLIC_PADDLE_ENV}
+  NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY:?set NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+  NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?set NEXT_PUBLIC_APP_URL}
+  NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL:?set NEXT_PUBLIC_CLIENT_URL}
+  S3_IMAGE_HOSTNAME: ${S3_IMAGE_HOSTNAME:?set S3_IMAGE_HOSTNAME}
+
+x-aws: &aws
+  AWS_REGION: ${AWS_REGION:?set AWS_REGION}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?set AWS_ACCESS_KEY_ID}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?set AWS_SECRET_ACCESS_KEY}
+  AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:?set AWS_S3_BUCKET_NAME}
+  S3_PUBLIC_URL: ${S3_PUBLIC_URL:?set S3_PUBLIC_URL}
+
+x-smtp: &smtp
+  SMTP_IAM_USER: ${SMTP_IAM_USER}
+  SMTP_USERNAME: ${SMTP_USERNAME}
+  SMTP_PASSWORD: ${SMTP_PASSWORD}
+
+x-restart: &restart
+  restart: unless-stopped
+
 services:
   main:
+    <<: *restart
     container_name: main
     build:
-      args:
-        NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
-        NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
-        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
-        NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
       context: .
       dockerfile: ./apps/main/Dockerfile
-    restart: always
-    ports:
-      - 3000:3000
+      args: *public-build-args
+    environment:
+      <<: [*aws, *smtp]
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL}
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL:?set AUTH_URL}
+      AUTH_TRUST_HOST: "true"
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:?set AUTH_GOOGLE_ID}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:?set AUTH_GOOGLE_SECRET}
+      NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
+      NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
+      PADDLE_API_KEY: ${PADDLE_API_KEY:?set PADDLE_API_KEY}
+      PADDLE_WEBHOOK_SECRET: ${PADDLE_WEBHOOK_SECRET:?set PADDLE_WEBHOOK_SECRET}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?set WEBHOOK_SECRET}
+      AWS_EMAIL_S3_BUCKET_NAME: ${AWS_EMAIL_S3_BUCKET_NAME:?set AWS_EMAIL_S3_BUCKET_NAME}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:?set MAIL_FROM_ADDRESS}
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          memory: 512M
     labels:
       - traefik.enable=true
       - traefik.docker.network=coolify
-    environment:
-      - NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
-      - NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL}
+
+      - traefik.http.routers.main-https.rule=Host(`${APP_HOSTNAME:?set APP_HOSTNAME}`)
+      - traefik.http.routers.main-https.entryPoints=https
+      - traefik.http.routers.main-https.tls=true
+      - traefik.http.routers.main-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.main-https.middlewares=gzip,security-headers
+      - traefik.http.routers.main-https.service=main-service
+
+      - traefik.http.routers.main-http.rule=Host(`${APP_HOSTNAME}`)
+      - traefik.http.routers.main-http.entryPoints=http
+      - traefik.http.routers.main-http.middlewares=redirect-to-https
+
+      - traefik.http.services.main-service.loadbalancer.server.port=3000
     networks:
       - coolify
     depends_on:
-      - migration
+      migration:
+        condition: service_completed_successfully
 
   client:
+    <<: *restart
     container_name: client
     build:
-      args:
-        NEXT_PUBLIC_PADDLE_CLIENT_KEY: ${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
-        NEXT_PUBLIC_PADDLE_ENV: ${NEXT_PUBLIC_PADDLE_ENV}
-        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
-        NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
       context: .
       dockerfile: ./apps/client/Dockerfile
-    restart: always
-    ports:
-      - 3001:3001
+      args: *public-build-args
     environment:
-      - NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
-      - NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-      - NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL}
+      <<: [*aws, *smtp]
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+      RECAPTCHA_SECRET_KEY: ${RECAPTCHA_SECRET_KEY:?set RECAPTCHA_SECRET_KEY}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      NEXT_PUBLIC_CLIENT_URL: ${NEXT_PUBLIC_CLIENT_URL}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3001/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          memory: 512M
     labels:
       - traefik.enable=true
       - traefik.docker.network=coolify
-      - traefik.http.routers.client-router-https.rule=HostRegexp(`^.+\.requro\.com$`)
-      - traefik.http.routers.client-router-https.priority=0
-      - traefik.http.routers.client-router-https.entryPoints=https
-      - traefik.http.routers.client-router-https.tls=true
-      - traefik.http.routers.client-router-https.tls.certresolver=letsencrypt
-      - traefik.http.routers.client-router-https.middlewares=gzip
-      - traefik.http.routers.client-router-https.service=client-service
 
-       # HTTP Router (for redirecting to HTTPS)
-      - traefik.http.routers.client-router-http.rule=HostRegexp(`^.+\.requro\.com$`)
-      - traefik.http.routers.client-router-http.priority=0
-      - traefik.http.routers.client-router-http.entryPoints=http
-      - traefik.http.routers.client-router-http.middlewares=redirect-to-https
+      # Tenant subdomains (*.CLIENT_DOMAIN) plus any custom domains routed here.
+      - traefik.http.routers.client-https.rule=HostRegexp(`^.+\.${CLIENT_DOMAIN:?set CLIENT_DOMAIN}$`)
+      - traefik.http.routers.client-https.priority=0
+      - traefik.http.routers.client-https.entryPoints=https
+      - traefik.http.routers.client-https.tls=true
+      - traefik.http.routers.client-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.client-https.tls.domains[0].main=${CLIENT_DOMAIN}
+      - traefik.http.routers.client-https.tls.domains[0].sans=*.${CLIENT_DOMAIN}
+      - traefik.http.routers.client-https.middlewares=gzip,security-headers
+      - traefik.http.routers.client-https.service=client-service
 
-       # Define HTTPS Middleware (Compression)
-      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.routers.client-http.rule=HostRegexp(`^.+\.${CLIENT_DOMAIN}$`)
+      - traefik.http.routers.client-http.priority=0
+      - traefik.http.routers.client-http.entryPoints=http
+      - traefik.http.routers.client-http.middlewares=redirect-to-https
 
-       # Define HTTP to HTTPS Redirection Middleware
-      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
-
-      # Service Definition
       - traefik.http.services.client-service.loadbalancer.server.port=3001
 
-      - caddy_0.encode=zstd gzip
-      - caddy_0.handle_path.0_reverse_proxy={{upstreams}}
-      - caddy_0.handle_path=*
-      - caddy_0.header=-Server
-      - caddy_0.try_files={path} /index.html /index.php
-      - caddy_0=://
-      - caddy_ingress_network=coolify
-
+      # Shared middleware definitions
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.security-headers.headers.stsSeconds=31536000
+      - traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.security-headers.headers.browserXssFilter=true
+      - traefik.http.middlewares.security-headers.headers.referrerPolicy=strict-origin-when-cross-origin
     networks:
       - coolify
     depends_on:
-      - migration
+      migration:
+        condition: service_completed_successfully
 
   migration:
     container_name: migration
@@ -98,10 +171,11 @@ services:
       context: .
       dockerfile: ./Dockerfile.migrate
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+    restart: "no"
     networks:
       - coolify
-    command: ["pnpm", "run", "db:migrate:deploy"]
 
 networks:
   coolify:

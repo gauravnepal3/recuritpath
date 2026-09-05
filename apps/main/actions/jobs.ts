@@ -2,6 +2,7 @@
 import { JobApplication, JobPost, JobStage, prisma } from '@repo/database'
 import { z } from "zod"
 import { currentUser } from '@/lib/auth'
+import { candidateAccessScope } from '@/lib/organization'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { organizationRoleGuard, userDetails } from '@/lib/utils'
@@ -969,7 +970,8 @@ export const moveToStage = async ({ userID, candidateID, stageID, confirmation }
 
         const candidateDetails = await prisma.candidateApplication.findFirst({
             where: {
-                id: candidateID
+                id: candidateID,
+                ...candidateAccessScope(user.id),
             },
             include: {
                 formResponses: true,
@@ -1101,7 +1103,8 @@ export const addComment = async ({ userID, jobID, comment, candidateID }: { user
         }
         const candidateDetails = await prisma.candidateApplication.findFirst({
             where: {
-                id: candidateID
+                id: candidateID,
+                ...candidateAccessScope(user.id),
             }
         })
         if (!candidateDetails) {
@@ -1167,7 +1170,8 @@ export const updateComment = async ({ userID, jobID, comment, candidateID, timel
         }
         const candidateDetails = await prisma.candidateApplication.findFirst({
             where: {
-                id: candidateID
+                id: candidateID,
+                ...candidateAccessScope(user.id),
             }
         })
         if (!candidateDetails) {
@@ -1231,7 +1235,8 @@ export const deleteComment = async ({ userID, jobID, comment, candidateID, timel
         }
         const candidateDetails = await prisma.candidateApplication.findFirst({
             where: {
-                id: candidateID
+                id: candidateID,
+                ...candidateAccessScope(user.id),
             }
         })
         if (!candidateDetails) {

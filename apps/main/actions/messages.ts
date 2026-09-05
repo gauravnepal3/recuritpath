@@ -1,5 +1,6 @@
 'use server'
 import { currentUser } from "@/lib/auth";
+import { candidateAccessScope } from '@/lib/organization'
 import { sendEmail } from "@/lib/mail";
 import { prisma } from "@repo/database"
 import { revalidatePath } from "next/cache";
@@ -45,7 +46,8 @@ export const sendMessage = async ({
         }
         const candidateDetails = await prisma.candidateApplication.findFirst({
             where: {
-                id: candidateID
+                id: candidateID,
+                ...candidateAccessScope(user.id),
             },
             include: {
                 jobPost: {

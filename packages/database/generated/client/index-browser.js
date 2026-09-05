@@ -344,6 +344,14 @@ exports.Prisma.NotificationReceiptScalarFieldEnum = {
   readAt: 'readAt'
 };
 
+exports.Prisma.RateLimitScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  windowStart: 'windowStart',
+  count: 'count',
+  expiresAt: 'expiresAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -371,6 +379,7 @@ exports.Prisma.JsonNullValueFilter = {
 };
 exports.OrganizationRole = exports.$Enums.OrganizationRole = {
   OWNER: 'OWNER',
+  ADMIN: 'ADMIN',
   INTERVIEWER: 'INTERVIEWER'
 };
 
@@ -419,7 +428,8 @@ exports.Prisma.ModelName = {
   JobMailingTemplate: 'JobMailingTemplate',
   EmailMessage: 'EmailMessage',
   Notification: 'Notification',
-  NotificationReceipt: 'NotificationReceipt'
+  NotificationReceipt: 'NotificationReceipt',
+  RateLimit: 'RateLimit'
 };
 
 /**

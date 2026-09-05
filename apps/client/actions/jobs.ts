@@ -5,6 +5,8 @@ import { generatePresignedUrl } from "./getPresignedURL";
 import { validateRecaptcha } from "./reCaptcha";
 
 import { prisma } from "@repo/database"
+import { headers } from "next/headers";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { sendEmail } from '@/lib/mail';
 import path from 'path';
 
@@ -41,6 +43,17 @@ export const submitForm = async (formData: FormData): Promise<SuccessResponse<Ca
 
         if (!token || !jobID) {
             return { type: "ERROR", message: "Missing required fields" };
+        }
+
+        // Step 0: Throttle. reCAPTCHA scoring alone leaves this open to a
+        // patient attacker; the form writes rows and uploads files to S3.
+        const ip = clientIp(await headers());
+        const [byIp, byJob] = await Promise.all([
+            rateLimit({ key: `apply:ip:${ip}`, limit: 10, windowSeconds: 3600 }),
+            rateLimit({ key: `apply:job:${jobID}:${ip}`, limit: 3, windowSeconds: 3600 }),
+        ]);
+        if (!byIp.ok || !byJob.ok) {
+            return { type: "ERROR", message: "Too many applications submitted. Please try again later." };
         }
 
         // Step 1: Validate reCAPTCHA

@@ -1,99 +1,74 @@
-FROM node:20.12.2-alpine AS base
+# syntax=docker/dockerfile:1
 
-# Builder stage
-FROM base AS builder
-RUN apk update && apk add --no-cache \
-    libc6-compat \
-    python3 \
-    make \
-    g++ \
-    pkgconfig \
-    pixman-dev \
-    cairo-dev \
-    pango-dev \
-    giflib-dev \
-    librsvg-dev \
-    openssl \
-    && ln -sf python3 /usr/bin/python
-
+# ---------------------------------------------------------------------------
+# Base — pnpm is pinned from the root package.json "packageManager" field so
+# builds are reproducible.
+# ---------------------------------------------------------------------------
+FROM node:22.14-alpine AS base
+RUN corepack enable
 WORKDIR /app
-RUN yarn global add turbo
+
+# ---------------------------------------------------------------------------
+# Pruner — reduce the monorepo to just what `main` needs.
+# ---------------------------------------------------------------------------
+FROM base AS pruner
+RUN --mount=type=cache,target=/root/.npm npm i -g turbo@2.3.3
 COPY . .
 RUN turbo prune main --docker
 
-# Installer stage
+# ---------------------------------------------------------------------------
+# Installer — deps, codegen, build.
+# ---------------------------------------------------------------------------
 FROM base AS installer
-RUN apk update && apk add --no-cache \
-    libc6-compat \
-    python3 \
-    make \
-    g++ \
-    pkgconfig \
-    pixman-dev \
-    cairo-dev \
-    pango-dev \
-    giflib-dev \
-    librsvg-dev \
-    openssl \
-    && ln -sf python3 /usr/bin/python
+RUN apk add --no-cache libc6-compat openssl
 
-WORKDIR /app
-RUN apk add --no-cache curl
-RUN yarn global add pnpm turbo
+COPY --from=pruner /app/out/json/ .
+RUN --mount=type=cache,target=/pnpm-store \
+    pnpm config set store-dir /pnpm-store && \
+    pnpm install --frozen-lockfile
 
-ENV PYTHON=/usr/bin/python3
-ENV npm_config_python=/usr/bin/python3
-
-COPY --from=builder /app/out/json/ .
-COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-
-RUN pnpm install --unsafe-perm
-
-COPY --from=builder /app/out/full/ .
-# 🆕 Copy mailTemplates for main
-COPY apps/main/mailTemplates ./apps/main/mailTemplates
-
+COPY --from=pruner /app/out/full/ .
 RUN pnpm run generate
 
-# Set build arguments for public environment variables
+# NEXT_PUBLIC_* values are inlined at build time, so they must be correct here
+# and not merely present at runtime.
 ARG NEXT_PUBLIC_PADDLE_CLIENT_KEY
 ARG NEXT_PUBLIC_PADDLE_ENV
 ARG NEXT_PUBLIC_RECAPTCHA_SITE_KEY
 ARG NEXT_PUBLIC_APP_URL
 ARG NEXT_PUBLIC_CLIENT_URL
+ENV NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY} \
+    NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV} \
+    NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${NEXT_PUBLIC_RECAPTCHA_SITE_KEY} \
+    NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
+    NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL} \
+    NEXT_TELEMETRY_DISABLED=1
 
-# Set environment variables for Next.js build process
-ENV NEXT_PUBLIC_PADDLE_CLIENT_KEY=${NEXT_PUBLIC_PADDLE_CLIENT_KEY}
-ENV NEXT_PUBLIC_PADDLE_ENV=${NEXT_PUBLIC_PADDLE_ENV}
-ENV NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
-ENV NEXT_PUBLIC_CLIENT_URL=${NEXT_PUBLIC_CLIENT_URL}
+RUN pnpm turbo build --filter=main
 
-RUN pnpm turbo build
-
-# Runner stage
+# ---------------------------------------------------------------------------
+# Runner — standalone server only. No package manager, no source, no secrets.
+# ---------------------------------------------------------------------------
 FROM base AS runner
-WORKDIR /app
-RUN apk add --no-cache curl
+RUN apk add --no-cache openssl curl
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY ./apps/main/entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
-USER nextjs
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser --system --uid 1001 nextjs
 
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/standalone ./
-COPY --from=installer --chown=nextjs:nodejs /app/packages/database/generated /app/packages/database/generated
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/.next/static ./apps/main/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/public ./apps/main/public
-# 🆕 Copy mailTemplates into final container
 COPY --from=installer --chown=nextjs:nodejs /app/apps/main/mailTemplates ./apps/main/mailTemplates
 
+USER nextjs
 EXPOSE 3000
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-CMD node apps/main/server.js
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:3000/api/health || exit 1
+
+CMD ["node", "apps/main/server.js"]

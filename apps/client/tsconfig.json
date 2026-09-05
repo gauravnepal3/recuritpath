@@ -47,8 +47,7 @@
     "../../packages/ui/src/components/toaster.tsx",
     "../../packages/ui/src/components/toggle-group.tsx",
     "../../packages/ui/src/components/toggle.tsx",
-    "../../packages/ui/src/components/tooltip.tsx",
-    "../main/actions/messages.ts"
+    "../../packages/ui/src/components/tooltip.tsx"
   ],
   "exclude": ["node_modules"]
 }

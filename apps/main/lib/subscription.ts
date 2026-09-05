@@ -1,20 +1,10 @@
 import { prisma } from "@repo/database";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { currentUser } from "./auth";
+import { requireActiveOrganization } from "./organization";
 export const getOrganizationTier = async () => {
-    const user = await currentUser();
-    if (!user) {
-        redirect('/auth/login')
-    }
-    const cookiesProvider = await cookies()
-    const activeOrganization = cookiesProvider.get('organization')?.value
-    if (!activeOrganization) {
-        redirect('/organization/manage')
-    }
+    const { organizationId } = await requireActiveOrganization();
     const organizationTier = await prisma.organizationSubscription.findFirst({
         where: {
-            organizationId: activeOrganization
+            organizationId
         }
     })
     if (!organizationTier) return 'Free';

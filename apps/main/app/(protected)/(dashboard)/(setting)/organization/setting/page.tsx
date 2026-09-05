@@ -2,7 +2,7 @@ import React from 'react'
 import OrganizationName from './_components/OrganizationName'
 import { currentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { requireActiveOrganization } from '@/lib/organization';
 import { prisma } from '@repo/database'
 import OrganizationImage from './_components/OrganizationImage';
 import { Avatar, AvatarImage, AvatarFallback } from '@repo/ui/components/avatar';
@@ -46,15 +46,13 @@ const getOrganizationDetails = async ({ organizationId }: { organizationId: stri
     })
 }
 const page = async () => {
-    const cookieProvider = await cookies();
     const user = await currentUser();
     if (!user) {
         redirect('/auth/login')
     }
-    const activeOrganization = cookieProvider.get('organization')
-    const organizationDetails = await getOrganizationDetails({ organizationId: activeOrganization?.value ?? '' })
+    const { organizationId } = await requireActiveOrganization()
+    const organizationDetails = await getOrganizationDetails({ organizationId })
     const organizationTier = await getOrganizationTier()
-    console.log(organizationTier)
     if (!organizationDetails) {
         return 404;
     }
@@ -64,7 +62,7 @@ const page = async () => {
                 Manage Organization
             </div>
             <div className="">
-                <OrganizationName userID={user.id} organizationID={activeOrganization?.value ?? ''} organizationName={organizationDetails?.name} />
+                <OrganizationName userID={user.id} organizationID={organizationId} organizationName={organizationDetails?.name} />
             </div>
             <div className="mt-4">
                 <OrganizationImage organizationID={organizationDetails.id} image={organizationDetails.logo ? `${process.env.S3_PUBLIC_URL}/${organizationDetails.logo}` : null} />

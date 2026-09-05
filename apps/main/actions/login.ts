@@ -19,6 +19,8 @@ import {
 import {
   getTwoFactorConfirmationByUserId
 } from "@/data/two-factor-confirmation";
+import { headers } from "next/headers";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export const login = async (
   values: z.infer<typeof LoginSchema>,
@@ -32,6 +34,17 @@ export const login = async (
   }
 
   const { email, password, code } = validatedFields.data;
+
+  // Throttle per-IP and per-account so credential stuffing cannot run
+  // unbounded against the login form.
+  const ip = clientIp(await headers());
+  const [byIp, byAccount] = await Promise.all([
+    rateLimit({ key: `login:ip:${ip}`, limit: 20, windowSeconds: 300 }),
+    rateLimit({ key: `login:email:${email.toLowerCase()}`, limit: 10, windowSeconds: 300 }),
+  ]);
+  if (!byIp.ok || !byAccount.ok) {
+    return { error: "Too many attempts. Please try again in a few minutes." };
+  }
 
   const existingUser = await getUserByEmail(email);
 

@@ -1,7 +1,7 @@
 
-import { cookies } from 'next/headers'
 import { prisma } from '@repo/database'
 import { currentUser } from "@/lib/auth";
+import { requireActiveOrganization } from "@/lib/organization";
 import { redirect } from "next/navigation";
 import Link from 'next/link';
 import { ArrowLeft, Bell } from 'lucide-react';
@@ -25,11 +25,12 @@ const getJobDetails = async (organizationID: string, userID: string, jobID: stri
     return await prisma.jobPost.findFirst({
         where: {
             id: jobID,
+            organizationId: organizationID,
             organization: {
                 organizationRole: {
                     some: {
                         userId: userID,
-                        // role: "OWNER"
+                        status: "ACTIVE"
                     }
                 }
             }
@@ -62,13 +63,9 @@ const getJobDetails = async (organizationID: string, userID: string, jobID: stri
 
 const JobLayout = async ({ children, params }: ProtectedLayoutProps) => {
     const user = await currentUser()
-    const cookieStore = await cookies()
-    const organization = cookieStore.get('organization')
+    const { organizationId } = await requireActiveOrganization()
     const jobID = (await params).slug;
-    if (!organization) {
-        redirect('/organization/manage')
-    }
-    const jobDetails = await getJobDetails(organization.value, user?.id ?? '', jobID)
+    const jobDetails = await getJobDetails(organizationId, user?.id ?? '', jobID)
     if (!jobDetails) {
         redirect('/')
     }
@@ -84,7 +81,7 @@ const JobLayout = async ({ children, params }: ProtectedLayoutProps) => {
                         <div className="font-semibold text-lg">
                             {jobDetails.title}
                         </div>
-                        <GeneratePreviewJob jobID={jobDetails.id} organizationID={organization.value} />
+                        <GeneratePreviewJob jobID={jobDetails.id} organizationID={organizationId} />
                     </div>
                 </div>
             </div>

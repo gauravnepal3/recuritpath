@@ -3,25 +3,21 @@ import { CheckoutContents } from './_components/checkout-contents';
 import { currentUser } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@repo/database'
-import { cookies } from 'next/headers';
-const getOrganizationSubscription = async (organizationId: string, userId: string) => {
+import { requireActiveOrganization } from '@/lib/organization';
+const getOrganizationSubscription = async (organizationId: string) => {
     return await prisma.organizationSubscription.findFirst({
         where: {
-            organizationId: organizationId
+            organizationId
         }
     })
 }
 export default async function CheckoutPage() {
-    const cookiesProvider = await cookies()
     const user = await currentUser()
     if (!user) {
         redirect('/auth/login')
     }
-    const organizationId = cookiesProvider.get('organization')?.value
-    if (!organizationId) {
-        redirect('/')
-    }
-    const organizationSubscription = await getOrganizationSubscription(organizationId, user.id)
+    const { organizationId } = await requireActiveOrganization()
+    const organizationSubscription = await getOrganizationSubscription(organizationId)
     return (
         <div className={'w-full min-h-screen relative overflow-hidden light'}>
             <div

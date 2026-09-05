@@ -2,6 +2,7 @@
 import { cookies } from 'next/headers'
 import { prisma } from '@repo/database'
 import { currentUser } from "@/lib/auth";
+import { candidateAccessScope } from "@/lib/organization";
 import { redirect } from "next/navigation";
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -19,10 +20,11 @@ export const metadata: Metadata = {
     title: 'Candidates | Requro',
 }
 
-const getApplicantsByStage = async (stageID: string, jobID: string) => {
+const getApplicantsByStage = async (stageID: string, jobID: string, userID: string) => {
     const allCandidates = await prisma.candidateApplication.findMany({
         where: {
             jobId: jobID,
+            ...candidateAccessScope(userID),
         },
         select: {
             id: true,
@@ -84,14 +86,13 @@ const getApplicantsByStage = async (stageID: string, jobID: string) => {
 
 
 const StageLayout = async ({ children, params }: ProtectedLayoutProps) => {
-    const cookieStore = await cookies()
-    const organization = cookieStore.get('organization')
-    if (!organization) {
-        redirect('/organization/manage')
+    const user = await currentUser()
+    if (!user?.id) {
+        redirect('/auth/login')
     }
     const stageID = (await params).stageId
     const jobID = (await params).slug
-    const applicantsByStage = await getApplicantsByStage(stageID, jobID)
+    const applicantsByStage = await getApplicantsByStage(stageID, jobID, user.id)
     return (
         <div className="relative">
             <div className="flex z-10">
