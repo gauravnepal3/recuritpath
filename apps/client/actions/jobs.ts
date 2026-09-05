@@ -176,7 +176,6 @@ export const submitForm = async (formData: FormData): Promise<SuccessResponse<Ca
             const mail = await sendEmail(
                 {
                     to: [validMappedData.find(x => x.label === "Email")?.value ?? ''],
-                    from: 'career@requro.com',
                     subject: mailTemplate?.subject ?? 'Application Received',
                     body: mailTemplate?.body ?? '',
                     htmlTemplate: {

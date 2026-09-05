@@ -54,9 +54,7 @@ export default function EmailMessage({ userID, candidateID }: {
             const promise = sendMessage({
                 userID: userID, candidateID: candidateID,
                 body: values.message ?? '',
-                from: 'career@requro.com',
-                mailTo: 'gauravnepal3@gmail.com',
-                subject: "Test Mail"
+                subject: "You have a new message.",
             })
             toast.promise(
                 promise.then((response) => {

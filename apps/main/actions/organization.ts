@@ -299,7 +299,6 @@ export async function addTeamMember({ organizationId, userId, email, role }: { o
         await sendEmail({
             to: [email],
             body: '',
-            from: "career@requro.com",
             subject: "You're invited.",
             htmlTemplate: {
                 filePath: path.join(process.cwd(), "mailTemplates", "inviteOrganization.hbs"),

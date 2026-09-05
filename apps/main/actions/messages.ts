@@ -25,17 +25,13 @@ interface ErrorResponse {
 export const sendMessage = async ({
     userID,
     candidateID,
-    mailTo,
     body,
-    from,
     subject,
     attachment
 }: {
     userID: string,
     candidateID: string,
-    mailTo: string,
     body: string,
-    from: string,
     subject: string,
     attachment?: File
 }) => {
@@ -70,11 +66,23 @@ export const sendMessage = async ({
                 message: "Unable to handle the request!"
             }
         }
+        // The recipient is the candidate's own address from their application,
+        // not whatever the caller passed. This previously sent every candidate
+        // message to one hardcoded gmail address.
+        const candidateEmail = candidateDetails.formResponses.find(
+            (x) => x.label?.toLowerCase() === "email"
+        )?.value;
+        if (!candidateEmail) {
+            return {
+                type: "ERROR",
+                message: "This candidate has no email address on file."
+            }
+        }
+
         const mail = await sendEmail({
-            to: ['gauravnepal3@gmail.com'],
+            to: [candidateEmail],
             body: body,
-            from: "career@requro.com",
-            subject: "You have a new message.",
+            subject: subject || "You have a new message.",
             htmlTemplate: {
                 filePath: path.join(process.cwd(), "mailTemplates", "newMessage.hbs"),
                 context: {
@@ -94,8 +102,8 @@ export const sendMessage = async ({
                 body: body,
                 direction: "SENT",
                 messageId: mail?.MessageId ?? '',
-                recipient: mailTo,
-                sender: "career@requro.com",
+                recipient: candidateEmail,
+                sender: process.env.MAIL_FROM_ADDRESS ?? "",
                 subject: subject,
                 candidateId: candidateID,
                 userId: userID,

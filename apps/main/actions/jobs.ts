@@ -1020,7 +1020,6 @@ export const moveToStage = async ({ userID, candidateID, stageID, confirmation }
                 .replaceAll("{{OrganizationName}}", organizationName);
             sendEmail({
                 to: [candidateDetails.formResponses.filter(x => x.label === "Email")[0]?.value ?? ''],
-                from: 'career@requro.com',
                 subject: `An updated on your application for ${candidateDetails.jobPost.title}`,
                 body: `Hi ${candidateDetails.formResponses.filter(x => x.label === "Name")[0]?.value ?? ''},\n\nWe wanted to inform you that your application for the position of ${candidateDetails.jobPost.title} has been archived. \n\nIf you have any questions or would like to discuss this further, please feel free to reach out.\n\nBest regards,\nThe Requro Team`,
                 htmlTemplate: {

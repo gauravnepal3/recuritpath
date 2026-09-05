@@ -118,7 +118,6 @@ export const requestReview = async ({ userID, candidateID, jobID, reviewer }: { 
         try {
             const mail = await sendEmail({
                 to: reviewer,
-                from: 'career@requro.com',
                 subject: 'Review Request',
                 body: `You have been requested to review the candidate ${candidateDetails?.formResponses.find(x => x.label === "Name")?.value} for the position ${candidateDetails?.jobPost?.title}. Please click on the link to review the candidate.`,
                 htmlTemplate: {
