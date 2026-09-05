@@ -6,10 +6,13 @@ import React from 'react'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 const GeneratePreviewJob = ({ organizationID, jobID }: { organizationID: string, jobID: string }) => {
-    const isDev = process.env.NODE_ENV === 'development';
-    const baseUrl = isDev
-        ? `${process.env.NEXT_PUBLIC_CLIENT_URL}` // e.g., localhost:3000
-        : `https://preview.${process.env.NEXT_PUBLIC_CLIENT_URL?.split('https://')[1]}`; // e.g., preview.requro.com
+    // Preview links are served by the public client app, and the route is
+    // selected by the /preview PATH (the proxy skips rewriting it), not by the
+    // hostname. So this only has to be a host that actually holds a
+    // certificate — tenant subdomains do not, which is why it is configurable
+    // rather than derived by prefixing the client domain.
+    const baseUrl =
+        process.env.NEXT_PUBLIC_PREVIEW_URL || process.env.NEXT_PUBLIC_CLIENT_URL;
 
     return (
         <Button variant={'link'} onClick={async () => {

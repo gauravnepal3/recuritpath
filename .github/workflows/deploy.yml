@@ -59,6 +59,7 @@ jobs:
           # them in repository variables, not secrets.
           build-args: |
             NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_PREVIEW_URL=${{ vars.NEXT_PUBLIC_PREVIEW_URL }}
             NEXT_PUBLIC_CLIENT_URL=${{ matrix.app == 'client' && vars.CLIENT_NEXT_PUBLIC_CLIENT_URL || vars.MAIN_NEXT_PUBLIC_CLIENT_URL }}
             NEXT_PUBLIC_PADDLE_ENV=${{ vars.NEXT_PUBLIC_PADDLE_ENV }}
             NEXT_PUBLIC_PADDLE_CLIENT_KEY=${{ vars.NEXT_PUBLIC_PADDLE_CLIENT_KEY }}
