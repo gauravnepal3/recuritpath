@@ -4,6 +4,7 @@ import * as z from "zod";
 
 import { db } from "@/lib/db";
 import { signIn } from "@/auth";
+import { AuthError } from "next-auth";
 import { LoginSchema } from "@/schemas";
 import { getUserByEmail } from "@/data/user";
 import { getTwoFactorTokenByEmail } from "@/data/two-factor-token";
@@ -21,6 +22,16 @@ import {
 } from "@/data/two-factor-confirmation";
 import { headers } from "next/headers";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+
+/** next/navigation throws to perform a redirect; those must never be caught. */
+function isRedirectError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    typeof (error as { digest?: unknown }).digest === "string" &&
+    (error as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+  );
+}
 
 export const login = async (
   values: z.infer<typeof LoginSchema>,
@@ -137,10 +148,25 @@ export const login = async (
       redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT,
     })
   } catch (error) {
-    throw error;
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return { error: "Invalid credentials!" };
+        default:
+          return { error: "Something went wrong!" };
+      }
     }
+    // Anything else — including the NEXT_REDIRECT that signIn throws on
+    // SUCCESS — must propagate untouched.
+    throw error;
   }
-  catch (error) {
+  } catch (error) {
+    // next/navigation signals redirects by throwing. Swallowing that here
+    // turned every successful login into "An error occurred during login."
+    // and left the user sitting on the login page.
+    if (isRedirectError(error)) {
+      throw error;
+    }
     console.error("Error in login function:", error);
     return { error: "An error occurred during login." };
   }
