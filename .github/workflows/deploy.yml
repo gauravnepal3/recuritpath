@@ -1,0 +1,104 @@
+name: Deploy
+
+# Builds the three images, pushes them to GHCR, then tells the server to pull
+# and restart. The server holds no source and no build toolchain — it only ever
+# pulls tagged images.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  NAMESPACE: ${{ github.repository_owner }}
+
+jobs:
+  build:
+    name: Build and push (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - app: main
+            dockerfile: ./apps/main/Dockerfile
+          - app: client
+            dockerfile: ./apps/client/Dockerfile
+          - app: migrate
+            dockerfile: ./Dockerfile.migrate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/recruit-${{ matrix.app }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/recruit-${{ matrix.app }}:latest
+          cache-from: type=gha,scope=recruit-${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=recruit-${{ matrix.app }}
+          # NEXT_PUBLIC_* are inlined into the client bundle here, so they must
+          # match the deployment. They are public values by definition — keep
+          # them in repository variables, not secrets.
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_CLIENT_URL=${{ matrix.app == 'client' && vars.CLIENT_NEXT_PUBLIC_CLIENT_URL || vars.MAIN_NEXT_PUBLIC_CLIENT_URL }}
+            NEXT_PUBLIC_PADDLE_ENV=${{ vars.NEXT_PUBLIC_PADDLE_ENV }}
+            NEXT_PUBLIC_PADDLE_CLIENT_KEY=${{ vars.NEXT_PUBLIC_PADDLE_CLIENT_KEY }}
+            NEXT_PUBLIC_RECAPTCHA_SITE_KEY=${{ vars.NEXT_PUBLIC_RECAPTCHA_SITE_KEY }}
+            S3_IMAGE_HOSTNAME=${{ vars.S3_IMAGE_HOSTNAME }}
+
+  deploy:
+    name: Deploy to server
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open SSH session
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Pull and restart
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd /opt/recruit-app \
+             && echo 'IMAGE_TAG=${{ github.sha }}' > .image-tag \
+             && echo 'NAMESPACE=${{ env.NAMESPACE }}' >> .image-tag \
+             && docker compose --env-file .env --env-file .image-tag \
+                  -f docker-compose.yml -f docker-compose.images.yml pull \
+             && docker compose --env-file .env --env-file .image-tag \
+                  -f docker-compose.yml -f docker-compose.images.yml up -d --remove-orphans \
+             && docker image prune -f"
+
+      - name: Verify health
+        run: |
+          ssh -i ~/.ssh/id_ed25519 \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            'for i in $(seq 1 30); do
+               s=$(docker inspect --format "{{.State.Health.Status}}" recruit-main 2>/dev/null)
+               [ "$s" = "healthy" ] && echo "recruit-main healthy" && exit 0
+               sleep 5
+             done
+             echo "recruit-main did not become healthy"
+             docker logs --tail 50 recruit-main
+             exit 1'
