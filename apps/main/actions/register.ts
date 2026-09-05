@@ -47,10 +47,22 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
 
   const verificationToken = await generateVerificationToken(email);
 
-  await sendVerificationEmail(
-    verificationToken.email,
-    verificationToken.token,
-  );
+  // The account row already exists at this point. Letting a delivery failure
+  // escape to the generic catch below leaves the user wedged: they cannot
+  // register again ("Email already in use!") and cannot log in (unverified,
+  // which tries to send the same mail). Report it instead of failing.
+  try {
+    await sendVerificationEmail(
+      verificationToken.email,
+      verificationToken.token,
+    );
+  } catch (error) {
+    console.error("Verification email failed to send for", email, error);
+    return {
+      error:
+        "Your account was created, but the confirmation email could not be sent. Please try signing in later to request a new link.",
+    };
+  }
 
   return { success: "Confirmation email sent!" };
   } catch (error) {

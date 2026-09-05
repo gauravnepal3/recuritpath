@@ -57,10 +57,18 @@ export const login = async (
       existingUser.email,
     );
 
-    await sendVerificationEmail(
-      verificationToken.email,
-      verificationToken.token,
-    );
+    try {
+      await sendVerificationEmail(
+        verificationToken.email,
+        verificationToken.token,
+      );
+    } catch (error) {
+      console.error("Verification email failed to send for", existingUser.email, error);
+      return {
+        error:
+          "We could not send your confirmation email just now. Please try again in a few minutes.",
+      };
+    }
 
     return { success: "Confirmation email sent!" };
   }
@@ -106,10 +114,17 @@ export const login = async (
       });
     } else {
       const twoFactorToken = await generateTwoFactorToken(existingUser.email)
-      await sendTwoFactorTokenEmail(
-        twoFactorToken.email,
-        twoFactorToken.token,
-      );
+      try {
+        await sendTwoFactorTokenEmail(
+          twoFactorToken.email,
+          twoFactorToken.token,
+        );
+      } catch (error) {
+        // Returning twoFactor:true here would strand the user on a code prompt
+        // for a code that was never delivered.
+        console.error("2FA email failed to send for", existingUser.email, error);
+        return { error: "We could not send your verification code. Please try again shortly." };
+      }
 
       return { twoFactor: true };
     }

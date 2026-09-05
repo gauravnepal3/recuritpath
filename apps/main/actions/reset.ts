@@ -32,11 +32,17 @@ export const reset = async (values: z.infer<typeof ResetSchema>) => {
   // Always report success: a distinct "Email not found!" turns this form into
   // an account-enumeration oracle.
   if (existingUser) {
-    const passwordResetToken = await generatePasswordResetToken(email);
-    await sendPasswordResetEmail(
-      passwordResetToken.email,
-      passwordResetToken.token,
-    );
+    try {
+      const passwordResetToken = await generatePasswordResetToken(email);
+      await sendPasswordResetEmail(
+        passwordResetToken.email,
+        passwordResetToken.token,
+      );
+    } catch (error) {
+      // Swallow deliberately: the response must not differ based on whether
+      // the address exists, and that includes failure modes.
+      console.error("Password reset email failed to send:", error);
+    }
   }
 
   return { success: "If that email has an account, a reset link is on its way." };
