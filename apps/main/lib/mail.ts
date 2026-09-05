@@ -12,6 +12,10 @@ const sesClient = new SESClient({
   },
 });
 
+// Verified SES identity. Hardcoding this meant a redeploy to a different
+// domain silently sent from an unverified address.
+const MAIL_FROM = process.env.MAIL_FROM_ADDRESS ?? "auth@requro.com";
+
 interface SendEmailOptions {
   to: string[];
   from: string;
@@ -140,7 +144,7 @@ export const sendTwoFactorTokenEmail = async (email: string, token: string) => {
 export const sendPasswordResetEmail = async (email: string, token: string) => {
   const resetLink = `${domain}/auth/new-password?token=${token}`;
   await sendEmail({
-    from: "auth@requro.com",
+    from: MAIL_FROM,
     to: [email],
     subject: "Confirm your email",
     body: "Click the link to confirm your email",
@@ -157,7 +161,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
   const confirmLink = `${domain}/auth/new-verification?token=${token}`;
 
   await sendEmail({
-    from: "auth@requro.com",
+    from: MAIL_FROM,
     to: [email],
     subject: "Confirm your email",
     body: "Click the link to confirm your email",

@@ -1,18 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@repo/database";
 
-export async function GET(req: NextRequest) {
-    const shouldSkipPrisma = process.env.DISABLE_PRISMA === "true";
+// Public endpoint (see routes.ts) — used by the container healthcheck and the
+// load balancer. It must never return application data.
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+    if (process.env.DISABLE_PRISMA === "true") {
+        return NextResponse.json({ status: "ok", db: "skipped" }, { status: 200 });
+    }
 
     try {
-        if (!shouldSkipPrisma) {
-            const organizations = await prisma.organization.findMany();
-            return NextResponse.json({ message: "DB connection successful", organizations }, { status: 200 });
-        } else {
-            return NextResponse.json({ message: "Prisma connection skipped" }, { status: 200 });
-        }
+        await prisma.$queryRaw`SELECT 1`;
+        return NextResponse.json({ status: "ok", db: "up" }, { status: 200 });
     } catch (error) {
-        console.error("Prisma error in health check:", error instanceof Error ? error.stack : error);
-        return NextResponse.json({ error: "Failed to run health check" }, { status: 500 });
+        console.error("Health check failed:", error instanceof Error ? error.message : error);
+        return NextResponse.json({ status: "error", db: "down" }, { status: 503 });
     }
 }

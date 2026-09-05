@@ -34,25 +34,38 @@ export const setActiveOrganization = async ({ organizationId, userId }: { organi
     const role = await prisma.organizationUserRole.findFirst({
         where: {
             organizationId: organizationId,
-            userId: user.id
+            userId: user.id,
+            status: "ACTIVE"
         }
     })
+    // Without this check the cookie is signed for any organization the caller
+    // names, whether or not they belong to it.
+    if (!role) {
+        redirect('/organization/unauthorized')
+    }
     const cookiesProvider = await cookies();
     const token = await new jose.SignJWT({
         organizationId,
-        userRole: role?.role
+        userRole: role.role
     })
         .setProtectedHeader({ alg: 'HS256' })
         .setExpirationTime('24h')
         .sign(secret);
 
-    cookiesProvider.delete('organizationRole')
-    cookiesProvider.set('organizationRole', token, {
+    const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        sameSite: "lax" as const,
         path: "/",
-    })
+    }
+
+    cookiesProvider.delete('organizationRole')
+    cookiesProvider.set('organizationRole', token, cookieOptions)
+    // Set server-side alongside the signed token. This used to be written by
+    // the client, which let anyone point it at an organization they are not a
+    // member of.
+    cookiesProvider.delete('organization')
+    cookiesProvider.set('organization', organizationId, cookieOptions)
 }
 
 export const updateOrganizationName = async ({ organizationName, organizationId }: { organizationName: string, organizationId: string }): Promise<SuccessResponse<Organization> | ErrorResponse> => {

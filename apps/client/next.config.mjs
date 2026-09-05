@@ -1,46 +1,45 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'recruit-path.s3.ap-south-1.amazonaws.com',
-        port: '',
-        pathname: '/public-folder/**',
-        search: '',
-      },
-    ],
-  },
-  output: 'standalone',
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '5mb',
+    output: 'standalone',
+    // Prisma's engine loader does dynamic filesystem access, which makes Next
+    // trace from an inferred root. Pin it to the monorepo root so the
+    // standalone output stays bounded instead of pulling in the whole project.
+    outputFileTracingRoot: path.join(__dirname, '../../'),
+
+    transpilePackages: ["@repo/ui"],
+    reactStrictMode: true,
+
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: process.env.S3_IMAGE_HOSTNAME ?? 'recruit-path.s3.ap-south-1.amazonaws.com',
+                port: '',
+                pathname: '/public-folder/**',
+            },
+        ],
     },
-  },
-  transpilePackages: ["@repo/ui"],
-  reactStrictMode: true,
-  webpack: (config) => {
-    // config.externals = [...config.externals, "canvas", "jsdom"];
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'handlebars': path.resolve(__dirname, 'node_modules', 'handlebars', 'dist', 'handlebars.js'),
-      // 'handlebars': 'handlebars/runtime.js',
-      "@/": path.resolve(__dirname, "src/"), // Fix alias resolution
-    };
-    config.resolve.fallback = {
 
-      // if you miss it, all the other options in fallback, specified
-      // by next.js will be dropped.
-      ...config.resolve.fallback,
+    experimental: {
+        serverActions: {
+            bodySizeLimit: '5mb',
+        },
+    },
 
-      fs: false, // the solution
-    };
-    return config;
-  },
-}
+    // See apps/main/next.config.mjs — same Turbopack migration.
+    serverExternalPackages: [
+        "canvas",
+        "jsdom",
+        "handlebars",
+        "mailcomposer",
+    ],
 
-export default nextConfig
+    turbopack: {},
+};
+
+export default nextConfig;

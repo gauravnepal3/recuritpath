@@ -5,6 +5,7 @@ import { Button } from "@repo/ui/components/button";
 import { LoginButton } from "@/components/auth/login-button";
 import { redirect } from 'next/navigation'
 import { currentUser } from "@/lib/auth";
+import { requireActiveOrganization } from '@/lib/organization';
 import Link from "next/link";
 import { AddJobDialog } from "../_components/AddJobDialog";
 import { prisma } from "@repo/database"
@@ -45,20 +46,15 @@ export default async function Home() {
   if (!user?.id) {
     redirect('/auth/login');
   }
-  const cookieStore = await cookies()
-  const activeOrganization = cookieStore.get('organization')
+  const { organizationId } = await requireActiveOrganization()
 
-  if (!activeOrganization) {
-    redirect('/organization/manage')
-  }
-
-  const jobDetails = await getJobDetails(user?.id, activeOrganization.value)
+  const jobDetails = await getJobDetails(user?.id, organizationId)
   return (
     <main>
       <div className="container mx-auto mt-3 max-w-screen-md">
         <div className="flex justify-between border-b pb-3 items-center">
           <div className="">Jobs</div>
-          <AddJobDialog userID={user?.id!} organizationID={activeOrganization.value} />
+          <AddJobDialog userID={user?.id!} organizationID={organizationId} />
         </div>
         <div className="mt-3">
           {jobDetails.length === 0 ?

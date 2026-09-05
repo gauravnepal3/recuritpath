@@ -6,6 +6,7 @@ import { timeAgo } from '@/lib/utils'
 import { Button } from '@repo/ui/components/button'
 import { AddComment } from './_components/AddComment'
 import { currentRole, currentUser } from '@/lib/auth'
+import { candidateAccessScope } from '@/lib/organization'
 import { EditComment } from './_components/EditComment'
 import { Avatar, AvatarFallback, AvatarImage } from '@repo/ui/components/avatar'
 import { AddReview } from './_components/AddReview'
@@ -16,10 +17,11 @@ import { cn } from '@repo/ui/lib/utils'
 import { RequestReview } from './_components/RequestReview'
 
 
-const getCandidateDetails = async (candidateID: string) => {
+const getCandidateDetails = async (candidateID: string, userID: string) => {
     return await prisma.candidateApplication.findFirst({
         where: {
-            id: candidateID
+            id: candidateID,
+            ...candidateAccessScope(userID),
         },
         include: {
 
@@ -87,7 +89,7 @@ const CandidatePage = async ({
     }
     const jobID = (await params).slug
     const candidateId = (await params).candidateId
-    const candidateData = await getCandidateDetails(candidateId)
+    const candidateData = await getCandidateDetails(candidateId, user.id)
     const timelineData = candidateData?.CandidateTimeline.filter(x => x.actionType !== "APPLIED").map(x => ({
         id: x.id,
         time: timeAgo(x.createdAt),

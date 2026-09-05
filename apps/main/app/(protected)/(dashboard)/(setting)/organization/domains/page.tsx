@@ -5,7 +5,7 @@ import { ExternalLink, Lock, UploadCloud } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import React from 'react'
 import { prisma } from '@repo/database'
-import { cookies } from 'next/headers';
+import { requireOrganizationAdmin } from '@/lib/organization';
 import { Input } from '@repo/ui/components/input';
 import { get } from 'node:https';
 import Link from 'next/link';
@@ -30,14 +30,10 @@ const Account = async () => {
 
 
     const user = await currentUser();
-    const cookiesProvider = await cookies()
-    const organizationId = cookiesProvider.get('organization')?.value
-    if (!organizationId) {
-        redirect('/')
-    }
     if (!user) {
         redirect('/auth/login')
     }
+    const { organizationId } = await requireOrganizationAdmin()
     const organizationDetails = await getOrganizationDetails(organizationId, user.id)
     return (
         <div className='p-4'>

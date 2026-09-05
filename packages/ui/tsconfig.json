@@ -1,28 +1,20 @@
 {
   "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
-    "moduleResolution": "nodenext",
-    "module": "NodeNext",
-    "baseUrl": ".", // This should be the base directory where your root package.json is
+    // These components are consumed by the Next apps via `transpilePackages`,
+    // i.e. always through a bundler. `nodenext` resolution rejected both the
+    // extensionless subpath imports used throughout minimal-tiptap and
+    // `tailwindcss/defaultTheme`, which has no exports entry.
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "noEmit": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"], // Adjust this if your root structure differs
-      "@repo/ui/*": ["../../packages/ui/src/*"] // Make sure this points to the right folder
+      "@/*": ["./*"],
+      "@repo/ui/*": ["./src/*"]
     },
-    "declaration": true, // Generate declaration files
-    "emitDeclarationOnly": true, // Only emit declaration files
-    "emitDeclarationOnly": true, // Only emit declaration files
-    "allowImportingTsExtensions": true, // Allow importing .ts extensions without needing to specify .ts
-    "esModuleInterop": true // Allows importing CommonJS modules smoothly
+    "esModuleInterop": true
   },
-  "include": [
-    "next-env.d.ts", // If using Next.js
-    "next.config.mjs", // If using Next.js config file
-    "**/*.ts",
-    "**/*.tsx", // Include TypeScript files
-    "../../packages/ui/src/**/*" // Ensure ui package files are included
-  ],
-  "exclude": [
-    "node_modules", // Exclude node_modules
-    "dist" // Exclude the dist folder
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "tailwind.config.ts"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -1,6 +1,7 @@
 "use server"
 import { z } from "zod"
 import { currentUser } from '@/lib/auth'
+import { candidateAccessScope } from '@/lib/organization'
 import { redirect } from 'next/navigation'
 import { prisma } from "@repo/database"
 import { revalidatePath } from "next/cache"
@@ -36,7 +37,8 @@ export const addReview = async ({ userID, jobID, candidateID, verdict, review }:
         }
         const candidateDetails = await prisma.candidateApplication.findFirst({
             where: {
-                id: candidateID
+                id: candidateID,
+                ...candidateAccessScope(user.id),
             }
         })
         if (!candidateDetails) {
@@ -95,7 +97,8 @@ export const requestReview = async ({ userID, candidateID, jobID, reviewer }: { 
         }
         const candidateDetails = await prisma.candidateApplication.findFirst({
             where: {
-                id: candidateID
+                id: candidateID,
+                ...candidateAccessScope(user.id),
             },
             include: {
                 formResponses: true,

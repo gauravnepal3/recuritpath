@@ -1,7 +1,7 @@
 
-import { cookies } from 'next/headers'
 import { prisma } from '@repo/database'
 import { currentUser } from "@/lib/auth";
+import { requireActiveOrganization } from "@/lib/organization";
 import { redirect } from "next/navigation";
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
@@ -15,22 +15,22 @@ interface ProtectedLayoutProps {
     params: Promise<{ slug: string }>
 };
 
-const getJobDetails = async (jobID: string) => {
+const getJobDetails = async (jobID: string, organizationId: string) => {
     return await prisma.jobPost.findFirst({
         where: {
-            id: jobID
+            id: jobID,
+            organizationId
         }
     })
 }
 const SettingLayout = async ({ children, params }: ProtectedLayoutProps) => {
-    const cookieStore = await cookies()
     const user = await currentUser()
-    const organization = cookieStore.get('organization')
+    const { organizationId } = await requireActiveOrganization()
     const jobId = (await params).slug
-    if (!organization) {
-        redirect('/organization/manage')
+    const jobDetails = await getJobDetails(jobId, organizationId)
+    if (!jobDetails) {
+        redirect('/')
     }
-    const jobDetails = await getJobDetails(jobId)
     return (
         <div className="relative">
             <div className="flex z-10">
@@ -39,7 +39,7 @@ const SettingLayout = async ({ children, params }: ProtectedLayoutProps) => {
                         "--sidebar-width": "18rem",
                     } as React.CSSProperties}
                 >
-                    <AppSidebar jobDetails={jobDetails} organizationID={organization.value} userID={user.id} jobId={jobId} />
+                    <AppSidebar jobDetails={jobDetails} organizationID={organizationId} userID={user.id} jobId={jobId} />
                     <SidebarInset className=''>
                         <ScrollArea className='h-[calc(100vh-4rem)]'>
                             {children}

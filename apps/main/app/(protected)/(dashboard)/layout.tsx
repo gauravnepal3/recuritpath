@@ -17,6 +17,7 @@ import {
 } from "@repo/ui/components/sidebar"
 import { prisma } from '@repo/database'
 import { currentUser } from "@/lib/auth";
+import { requireActiveOrganization } from '@/lib/organization';
 import { redirect } from "next/navigation";
 import { getOrganizationTier } from "@/lib/subscription";
 import { ScrollArea } from "@repo/ui/components/scroll-area";
@@ -45,13 +46,9 @@ const getOrganizationDetails = async (organizationID: string, userID: string, em
 
 const ProtectedLayout = async ({ children }: ProtectedLayoutProps) => {
   const user = await currentUser()
-  const cookieStore = await cookies()
-  const organization = cookieStore.get('organization')
+  const { organizationId } = await requireActiveOrganization()
   const organizationTier = await getOrganizationTier()
-  if (!organization) {
-    redirect('/organization/manage')
-  }
-  const organizationDetails = await getOrganizationDetails(organization.value, user?.id ?? '', user.email ?? '')
+  const organizationDetails = await getOrganizationDetails(organizationId, user?.id ?? '', user.email ?? '')
   if (!organizationDetails) {
     redirect('/organization/manage')
   }
